@@ -9,124 +9,55 @@
     #include <commdlg.h>
 #endif
 
+/* ============================================================
+ *  MINI MIPS 8 BITS — SIMULADOR PIPELINE
+ *  UNIPAMPA — Engenharia de Computacao — Projeto Integrador II.
+ * ============================================================ */
+
 static void linha(char c, int n)
 {
-    for (int i = 0; i < n; i++) printf("%c", c);
+
+    for (int i = 0; i < n; i++)
+    {
+
+        printf("%c", c);
+
+    }
+
     printf("\n");
+
 }
 
 static void titulo(const char *txt)
 {
+
     printf("\n");
+
     linha('=', 56);
+
     printf("  %s\n", txt);
+
     linha('=', 56);
+
 }
 
 static void secao(const char *txt)
 {
+
     printf("\n  -- %s --\n", txt);
-}
-
-void incrementaInstr(instrucoes *contaInstrucoes, unsigned char opcode, unsigned char funct){
-    switch (opcode)
-    {
-        case 0x0:                    // add, sub, and, or * 4
-            contaInstrucoes->tipoR++;
-            break;
-
-        case 0x4:   // addi * 4
-            contaInstrucoes->addi++;
-            break;
-        case 0xB:    // lw * 5
-            contaInstrucoes->lw++;
-            break;
-        case 0xF:                    // sw * 4
-            contaInstrucoes->sw++;
-            break;
-
-        case 0x8:                    // beq * 3
-            contaInstrucoes->beq++;
-            break;
-
-        case 0x2:                    // jump * 3
-            contaInstrucoes->jump++;
-            break;
-
-    }
 
 }
 
-void printEstatisticas(instrucoes contaInstrucoes){
-    printf("%-15s %-15s %-20s %-10s\n",
-                "INSTRUCAO",
-                "QUANTIDADE",
-                "QTD CICLOS",
-                "TOTAL");
-
-                printf("%-15s %-15d %-20d %-10d\n",
-                "tipoR",
-                contaInstrucoes.tipoR,
-                4,
-                contaInstrucoes.tipoR*4);
-
-                printf("%-15s %-15d %-20d %-10d\n",
-                "Addi",
-                contaInstrucoes.addi,
-                4,
-                contaInstrucoes.addi*4);
-
-                printf("%-15s %-15d %-20d %-10d\n",
-                "LW",
-                contaInstrucoes.lw,
-                5,
-                contaInstrucoes.lw*5);
-
-                printf("%-15s %-15d %-20d %-10d\n",
-                "SW",
-                contaInstrucoes.sw,
-                4,
-                contaInstrucoes.sw*4);
-
-                printf("%-15s %-15d %-20d %-10d\n",
-                "BEQ",
-                contaInstrucoes.beq,
-                3,
-                contaInstrucoes.beq*3);
-
-                printf("%-15s %-15d %-20d %-10d\n",
-                "jump",
-                contaInstrucoes.jump,
-                3,
-                contaInstrucoes.jump*3);
-
-                int somaTotal =
-                contaInstrucoes.tipoR * 4 +
-                contaInstrucoes.addi * 4 +
-                contaInstrucoes.lw * 5 +
-                contaInstrucoes.sw * 4 +
-                contaInstrucoes.beq * 3 +
-                contaInstrucoes.jump * 3;
-
-            printf("\n%-15s %-15s %-20s %-10d\n",
-                "TOTAL GERAL",
-                "",
-                "",
-                somaTotal);
-
-}
-
-//seleçao do arquivo
-void selecionar_arquivo(char *caminho)
+static void selecionar_arquivo(char *caminho)
 {
 #ifdef _WIN32
     OPENFILENAME ofn;
     memset(&ofn, 0, sizeof(ofn));
-    ofn.lStructSize = sizeof(ofn);
-    ofn.lpstrFile   = caminho;
+    ofn.lStructSize  = sizeof(ofn);
+    ofn.lpstrFile    = caminho;
     ofn.lpstrFile[0] = '\0';
-    ofn.nMaxFile    = 260;
-    ofn.lpstrFilter = "Arquivos MEM\0*.mem\0Todos\0*.*\0";
+    ofn.nMaxFile     = 260;
+    ofn.lpstrFilter  = "Arquivos MEM\0*.mem\0Todos\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
     if (GetOpenFileName(&ofn))
@@ -138,443 +69,722 @@ void selecionar_arquivo(char *caminho)
 #endif
 }
 
-//IMpressao do estado final da FSM
-static void print_estado(int estado)
+static void incrementaInstr(instrucoes *c, unsigned char opcode)
 {
-    const char *nomes[] = {
-        "BUSCA DA INSTRUCAO (fetch)",
-        "DECODIFICACAO + LEITURA DOS REGISTRADORES",
-        "CALCULO DO ENDERECO EFETIVO (lw / sw / addi)",
-        "ACESSO A MEMORIA: leitura (lw)",
-        "ESCRITA NO REGISTRADOR de destino (lw)",
-        "ACESSO A MEMORIA: escrita (sw)",
-        "ESCRITA NO REGISTRADOR de destino (addi)",
-        "EXECUCAO DA ULA (tipo R)",
-        "ESCRITA NO REGISTRADOR de destino (tipo R)",
-        "COMPARACAO E DESVIO CONDICIONAL (beq)",
-        "DESVIO INCONDICIONAL (jump)"
-    };
+    switch (opcode)
+    {
 
-    printf("\n");
-    linha('-', 56);
+        case 0x0:
 
-    if (estado >= 0 && estado <= 10)
-        printf("  CICLO  |  Estado %-2d : %s\n", estado, nomes[estado]);
-    else
-        printf("  CICLO  |  Estado invalido: %d\n", estado);
+            c->tipoR++;
 
-    linha('-', 56);
+            break;
+
+        case 0x4:
+
+            c->addi++;
+
+            break;
+
+        case 0xB:
+
+             c->lw++;
+
+             break;
+
+        case 0xF:
+
+             c->sw++;
+
+             break;
+
+        case 0x8:
+
+            c->beq++;
+
+            break;
+
+        case 0x2:
+
+            c->jump++;
+
+            break;
+
+
+    }
+
 }
 
-
-int executa_ciclo(instro *mem, signed char reg[8], int Sinais[16],
-                  int *estado, unsigned char *PC, unsigned short *RI,
-                  signed char *RDM, signed char *regA, signed char *regB,
-                  signed char *ULASaida, int *ULAop, int *overflow,
-                  int *zero, int *n_ciclo,instrucoes *contaInstrucoes)
+static void printEstatisticas(instrucoes c)
 {
-    (*n_ciclo)++;
 
-    unsigned char opcode = (*RI >> 12) & 0xF;
-    unsigned char rs     = (*RI >> 9)  & 0x7;
-    unsigned char rt     = (*RI >> 6)  & 0x7;
-    unsigned char rd     = (*RI >> 3)  & 0x7;
-    unsigned char imm6   = *RI & 0x3F;
-    unsigned char funct  = *RI & 0x7;
-    unsigned char addr   = *RI & 0xFF;
-    signed char   immx   = 0;
+    int total = c.tipoR + c.addi + c.lw + c.sw + c.beq + c.jump;
 
-    Estender(imm6, &immx);
-    print_estado(*estado);
-    Decodifica_estado(*estado, Sinais);
+    printf("  %-10s %-10s\n", "INSTRUCAO", "QTD");
 
-    int instrucao_concluida = 0;
+    printf("  %-10s %-10d\n", "Tipo R",   c.tipoR);
 
-    switch (*estado)
+    printf("  %-10s %-10d\n", "Addi",     c.addi);
+
+    printf("  %-10s %-10d\n", "LW",       c.lw);
+
+    printf("  %-10s %-10d\n", "SW",       c.sw);
+
+    printf("  %-10s %-10d\n", "BEQ",      c.beq);
+
+    printf("  %-10s %-10d\n", "Jump",     c.jump);
+
+    printf("  %-10s %-10d\n", "TOTAL",    total);
+
+}
+
+/* ============================================================
+ *  Estagio 1 (IF) — Instruction Fetch/busca
+ * ============================================================ */
+static void estagio_IF(instro *mem, unsigned char *PC, RegIF_ID *if_id)
+{
+
+    if_id->RI    = ler_unificada(mem, *PC);
+
+    if_id->PC    = busca(*PC);
+
+    if_id->valid = 1;
+
+    printf("  [IF ] PC=%-3d  RI=0x%04X  -> ", *PC, if_id->RI);
+
+    print_asm(if_id->RI);
+
+    *PC = if_id->PC;
+
+}
+
+/* ============================================================
+ *  ESTAGIO ID — Instruction Decode / decoficação
+ * ============================================================ */
+static void estagio_ID(signed char *reg, RegIF_ID *if_id, RegID_EX *id_ex)
+{
+    //debug para nao lidar agora com hazards diretametne
+    if (!if_id->valid)
     {
-        case 0:
-            *RI = ler_unificada(mem, *PC);
-            printf("  > Buscando instrucao na posicao %d da memoria\n", *PC);
-            printf("    RI  <- Mem[%d] = ", *PC);
-            print_bin(*RI);
-            printf(" (0x%04X)\n", *RI);
-            *PC = busca(*PC);
-            printf("    PC  <- %d  (incrementado para proxima instrucao)\n", *PC);
-            *estado = 1;
+
+        memset(id_ex, 0, sizeof(*id_ex));
+
+        return;
+    }
+
+    unsigned short instr = if_id->RI;
+
+    id_ex->opcode = (instr >> 12) & 0xF;
+
+    id_ex->rs     = (instr >> 9)  & 0x7;
+
+    id_ex->rt     = (instr >> 6)  & 0x7;
+
+    id_ex->rd     = (instr >> 3)  & 0x7;
+
+    id_ex->funct  = instr & 0x7;
+
+    id_ex->addr   = instr & 0xFF;
+
+    id_ex->PC     = if_id->PC;
+
+    id_ex->valid  = 1;
+
+    unsigned char imm6 = instr & 0x3F;
+
+    Estender(imm6, &id_ex->immx);
+
+    read(reg, (signed char)id_ex->rs, (signed char)id_ex->rt,&id_ex->A, &id_ex->B);
+
+    printf(" [ID ] op=0x%X rs=R%d(%d) rt=R%d(%d) rd=R%d imm=%d\n",id_ex->opcode,id_ex->rs, id_ex->A,id_ex->rt, id_ex->B,id_ex->rd,id_ex->immx);
+
+}
+
+/* ============================================================
+ *  ESTAGIO EX — Execute/exewcução
+ * ============================================================ */
+static void estagio_EX(RegID_EX *id_ex, RegEX_MEM *ex_mem)
+{
+
+    if (!id_ex->valid)
+    {
+
+        memset(ex_mem, 0, sizeof(*ex_mem));
+
+        return;
+
+    }
+
+    unsigned char opcode = id_ex->opcode;
+
+    int overflow = 0, zero = 0;
+
+    memset(ex_mem, 0, sizeof(*ex_mem));
+
+    ex_mem->rt    = id_ex->rt;
+
+    ex_mem->rd    = id_ex->rd;
+
+    ex_mem->B     = id_ex->B;
+
+    ex_mem->addr  = id_ex->addr;
+
+    ex_mem->valid = 1;
+
+    int ula_result = 0;
+
+    switch (opcode)
+    {
+        case 0x0: //Tipo R: add / sub / and / or
+
+            tipo(id_ex->funct);
+
+            ula_result= ula(id_ex->funct, id_ex->A, id_ex->B,&overflow, &zero);
+
+            ex_mem->RegWrite = 1;
+
+            ex_mem->RegDst   = 1;
+
             break;
 
-        case 1:
-            opcode = (*RI >> 12) & 0xF;
-            rs     = (*RI >> 9)  & 0x7;
-            rt     = (*RI >> 6)  & 0x7;
-            rd     = (*RI >> 3)  & 0x7;
-            imm6   = *RI & 0x3F;
-            funct  = *RI & 0x7;
-            addr   = *RI & 0xFF;
-            Estender(imm6, &immx);
+        case 0x4: // addi: rt = rs + imm
 
-            printf("  > Decodificando instrucao (opcode = 0x%X)\n", opcode);
-            read(reg, rs, rt, regA, regB);
-            printf("    A   <- R%d = %d\n", rs, *regA);
-            printf("    B   <- R%d = %d\n", rt, *regB);
-            *ULASaida = (signed char)(*PC) + immx;
-            printf("    ULA_saida <- PC(%d) + imm(%d) = %d  [endereco de branch pre-calculado]\n",
-                   *PC, immx, *ULASaida);
-            *estado = proximo_estado(1, opcode);
-            printf("  > Proximo estado: %d\n", *estado);
+            ula_result= ula(0, id_ex->A, id_ex->immx,&overflow, &zero);
+
+            ex_mem->RegWrite = 1;
+
+            ex_mem->RegDst   = 0;
+
             break;
 
-        case 2:
-            *ULASaida = (signed char)ula(0, *regA, immx, overflow, zero);
-            printf("  > Calculando endereco efetivo\n");
-            printf("    ULA_saida <- R%d(%d) + imm(%d) = %d\n",
-                   rs, *regA, immx, *ULASaida);
-            *estado = proximo_estado(2, opcode);
-            printf("  > Proximo estado: %d\n", *estado);
+        case 0xB: // lw: endereco = rs + imm
+
+            ula_result       = ula(0, id_ex->A, id_ex->immx,&overflow, &zero);
+
+            ex_mem->MemRead  = 1;
+
+            ex_mem->MemToReg = 1;
+
+            ex_mem->RegWrite = 1;
+
+            ex_mem->RegDst   = 0;
+
             break;
 
-        case 3:
-            *RDM = (signed char)ler_unificada(mem, (unsigned char)*ULASaida);
-            printf("  > Lendo dado da memoria\n");
-            printf("    RDM <- Mem[%d] = %d\n", (unsigned char)*ULASaida , *RDM);
-            *estado = 4;
+        case 0xF: // sw: endereco = rs + imm
+
+            ula_result= ula(0, id_ex->A, id_ex->immx,&overflow, &zero);
+
+            ex_mem->MemWrite = 1;
+
             break;
 
-        case 4:
-            esc(reg, rt, *RDM, 1);
-            printf("  > Escrevendo dado no registrador\n");
-            printf("    R%d  <- RDM = %d  [lw concluido]\n", rt, *RDM);
-            *estado = 0;
-            instrucao_concluida = 1;
-            incrementaInstr(contaInstrucoes, opcode, funct);
+        case 0x8: // beq
+
+            ula_result= ula(2, id_ex->A, id_ex->B,&overflow, &zero);
+
+            ex_mem->Branch= 1;
+
+            ex_mem->PC_branch = branch(id_ex->PC, (unsigned char)id_ex->immx);
+
             break;
 
-        case 5:
-            Store(mem, *ULASaida, *regB);
-            printf("  > Escrevendo dado na memoria\n");
-            printf("    Mem[%d] <- R%d = %d  [sw concluido]\n",
-                   (unsigned char)*ULASaida , rt, *regB);
-            *estado = 0;
-            instrucao_concluida = 1;
-            incrementaInstr(contaInstrucoes, opcode, funct);
-            break;
+        case 0x2: // jump
 
-        case 6:
-            esc(reg, rt, *ULASaida, 1);
-            printf("  > Escrevendo resultado no registrador\n");
-            printf("    R%d  <- ULA_saida = %d  [addi concluido]\n", rt, *ULASaida);
-            *estado = 0;
-            instrucao_concluida = 1;
-            incrementaInstr(contaInstrucoes, opcode, funct);
-            break;
+            ex_mem->Jump = 1;
 
-        case 7:
-            *ULAop = funct;
-            tipo(funct);
-            *ULASaida = (signed char)ula(*ULAop, *regA, *regB, overflow, zero);
-            printf("  > Executando operacao da ULA\n");
-            printf("    ULA_saida <- R%d(%d) op R%d(%d) = %d  (funct=%d)\n",
-                   rs, *regA, rt, *regB, *ULASaida, funct);
-            *estado = 8;
-            break;
-
-        case 8:
-            esc(reg, rd, *ULASaida, 1);
-            printf("  > Escrevendo resultado no registrador\n");
-            printf("    R%d  <- ULA_saida = %d  [tipo R concluido]\n", rd, *ULASaida);
-            if (*overflow)
-                printf("  ! ATENCAO: overflow detectado!\n");
-            *estado = 0;
-            instrucao_concluida = 1;
-            incrementaInstr(contaInstrucoes, opcode, funct);
-            break;
-
-        case 9:
-            ula(2, *regA, *regB, overflow, zero);
-            printf("  > Verificando condicao do branch (R%d == R%d ?)\n", rs, rt);
-            if (*zero)
-            {
-                *PC = (unsigned char)*ULASaida;
-                printf("    Condicao VERDADEIRA -> branch tomado\n");
-                printf("    PC  <- %d\n", *PC);
-            }
-            else
-            {
-                printf("    Condicao FALSA -> branch NAO tomado, PC permanece em %d\n", *PC);
-            }
-            *estado = 0;
-            instrucao_concluida = 1;
-            incrementaInstr(contaInstrucoes, opcode, funct);
-            break;
-
-        case 10:
-            *PC = jump(addr);
-            printf("  > Desvio incondicional\n");
-            printf("    PC  <- %d  [jump concluido]\n", *PC);
-            *estado = 0;
-            instrucao_concluida = 1;
-            incrementaInstr(contaInstrucoes, opcode, funct);
             break;
 
         default:
-            printf("  ! Estado invalido %d — resetando para 0\n", *estado);
-            *estado = 0;
+
+            printf("  [EX ] opcode desconhecido: 0x%X\n", opcode);
+
             break;
+
     }
 
-    return instrucao_concluida;
+    ex_mem->ULA_saida = ula_result;
+
+    ex_mem->zero= zero;
+
+
+    printf("  [EX ] op=0x%X ULA=%d zero=%d  RW=%d MR=%d MW=%d Branch=%d Jump=%d\n",opcode, ex_mem->ULA_saida, ex_mem->zero,ex_mem->RegWrite, ex_mem->MemRead, ex_mem->MemWrite,ex_mem->Branch, ex_mem->Jump);
+
 }
 
-
-int main(void)
+/* ============================================================
+ *  ESTAGIO MEM — Memory Access/ acesso a memoria
+ * ============================================================ */
+static void estagio_MEM(instro *mem, unsigned char *PC,RegEX_MEM *ex_mem, RegMEM_WB *mem_wb,instrucoes *conta, int *n_instr)
 {
 
-    #ifdef _WIN32
-        SetConsoleOutputCP(65001);
-        SetConsoleCP(65001);
-    #endif
+    if (!ex_mem->valid)
+    {
+
+        memset(mem_wb, 0, sizeof(*mem_wb));
+
+        return;
+
+    }
+
+    mem_wb->rt= ex_mem->rt;
+
+    mem_wb->rd= ex_mem->rd;
+
+    mem_wb->RegWrite  = ex_mem->RegWrite;
+
+    mem_wb->MemToReg  = ex_mem->MemToReg;
+
+    mem_wb->RegDst= ex_mem->RegDst;
+
+    mem_wb->ULA_saida = ex_mem->ULA_saida;
+
+    mem_wb->RDM= 0;
+
+    mem_wb->valid= 1;
+
+
+    // LW
+    if (ex_mem->MemRead)
+    {
+
+        mem_wb->RDM = (signed char)ler_unificada(mem,(unsigned char)ex_mem->ULA_saida);
+
+        printf("  [MEM] LW: Mem[%d] = %d\n",(unsigned char)ex_mem->ULA_saida, mem_wb->RDM);
+
+    }
+
+    // SW
+    if (ex_mem->MemWrite)
+    {
+
+        Store(mem, (signed char)ex_mem->ULA_saida, ex_mem->B);
+
+        printf("  [MEM] SW: Mem[%d] <- %d\n",(unsigned char)ex_mem->ULA_saida, ex_mem->B);
+
+        mem_wb->RegWrite = 0;
+
+        incrementaInstr(conta, 0xF);
+
+        (*n_instr)++;
+
+    }
+
+    // BEQ
+    if (ex_mem->Branch)
+    {
+
+        if (ex_mem->zero)
+        {
+
+            *PC = ex_mem->PC_branch;
+
+            printf("  [MEM] BEQ tomado: PC <- %d\n", *PC);
+
+        }
+
+        else
+        {
+
+            printf("  [MEM] BEQ nao tomado\n");
+
+        }
+
+        mem_wb->RegWrite = 0;
+
+        incrementaInstr(conta, 0x8);
+
+        (*n_instr)++;
+
+    }
+
+    // JUMP
+    if (ex_mem->Jump)
+    {
+        *PC = jump(ex_mem->addr);
+
+        printf("  [MEM] JUMP: PC <- %d\n", *PC);
+
+        mem_wb->RegWrite = 0;
+
+        incrementaInstr(conta, 0x2);
+
+        (*n_instr)++;
+
+    }
+}
+
+/* ============================================================
+ *  ESTAGIO WB — Write Back/escrita
+ * ============================================================ */
+static void estagio_WB(signed char *reg, RegMEM_WB *mem_wb,instrucoes *conta, int *n_instr)
+{
+
+    if (!mem_wb->valid || !mem_wb->RegWrite)
+    {
+        return;
+    }
+
+
+    int dest = mem_wb->RegDst ? (int)mem_wb->rd : (int)mem_wb->rt;
+
+    signed char valor = mem_wb->MemToReg ? mem_wb->RDM: (signed char)mem_wb->ULA_saida;
+
+    esc(reg, dest, valor, 1);
+
+    printf("  [WB ] R%d <- %d\n", dest, valor);
+
+    if (mem_wb->MemToReg)
+    {
+
+        incrementaInstr(conta, 0xB);   // lw
+    }
+
+    else if (mem_wb->RegDst)
+    {
+
+        incrementaInstr(conta, 0x0);   // tipo R
+
+    }
+
+    else
+    {
+
+        incrementaInstr(conta, 0x4);   // addi
+
+    }
+
+    (*n_instr)++;
+
+}
+
+/* ============================================================
+ *  executa_ciclo — avanca todos os 5 estagios em paralelo
+ * ============================================================ */
+static void executa_ciclo(instro *mem, signed char *reg,unsigned char *PC,RegIF_ID  *if_id,  RegID_EX  *id_ex,RegEX_MEM *ex_mem, RegMEM_WB *mem_wb,int *n_ciclo, int *n_instr,instrucoes *conta)
+{
+    (*n_ciclo)++;
+
+    printf("\n");
+
+    linha('-', 56);
+
+    printf("  CICLO %-3d  PC=%d\n", *n_ciclo, *PC);
+
+    linha('-', 56);
+
+
+    RegIF_ID  if_id_in  = *if_id;
+    RegID_EX  id_ex_in  = *id_ex;
+    RegEX_MEM ex_mem_in = *ex_mem;
+    RegMEM_WB mem_wb_in = *mem_wb;
+
+    estagio_WB (reg,  &mem_wb_in,          conta, n_instr);
+    estagio_MEM(mem, PC, &ex_mem_in, mem_wb, conta, n_instr);
+    estagio_EX (&id_ex_in,  ex_mem);
+    estagio_ID (reg,  &if_id_in,  id_ex);
+    estagio_IF (mem, PC, if_id);
+
+}
+
+/* ============================================================
+ *  Impressao do estado do pipeline
+ * ============================================================ */
+static void print_pipeline_state(unsigned char PC,RegIF_ID *if_id, RegID_EX *id_ex,RegEX_MEM *ex_mem, RegMEM_WB *mem_wb,int n_ciclo, int n_instr)
+{
+
+    printf("\n====================================================\n");
+    printf("           ESTADO DO PIPELINE\n");
+    printf("====================================================\n");
+    printf(" Clocks                | %d\n", n_ciclo);
+    printf(" Instrucoes concluidas | %d\n", n_instr);
+    printf(" PC atual              | %d\n", PC);
+    printf("----------------------------------------------------\n");
+    printf(" IF/ID  [%s]: RI=0x%04X  PC=%d\n",if_id->valid  ? "OK" : "--", if_id->RI,  if_id->PC);
+
+    printf(" ID/EX  [%s]: op=0x%X rs=R%d rt=R%d rd=R%d imm=%d A=%d B=%d\n",id_ex->valid  ? "OK" : "--",id_ex->opcode, id_ex->rs, id_ex->rt, id_ex->rd,id_ex->immx, id_ex->A, id_ex->B);
+
+    printf(" EX/MEM [%s]: ULA=%d zero=%d RW=%d MR=%d MW=%d Br=%d Jmp=%d\n",ex_mem->valid ? "OK" : "--",ex_mem->ULA_saida, ex_mem->zero,ex_mem->RegWrite, ex_mem->MemRead, ex_mem->MemWrite,ex_mem->Branch, ex_mem->Jump);
+
+    printf(" MEM/WB [%s]: RDM=%d ULA=%d RW=%d MtR=%d RDst=%d\n",mem_wb->valid ? "OK" : "--",mem_wb->RDM, mem_wb->ULA_saida,mem_wb->RegWrite, mem_wb->MemToReg, mem_wb->RegDst);
+
+    printf("====================================================\n");
+
+}
+
+/* ============================================================
+ *  MAIN
+ * ============================================================ */
+int main(void)
+{
+#ifdef _WIN32
+    SetConsoleOutputCP(65001);
+    SetConsoleCP(65001);
+#endif
     setlocale(LC_ALL, ".UTF-8");
 
-    instro        mem_unificada = {0};
-    signed char   reg[8];
-    instrucoes contaInstrucoes;
+    instro      mem_unificada   = {0};
+    signed char reg[8];
+    instrucoes  contaInstrucoes = {0};
     iniat(reg);
-    int           Sinais[16]  = {0};
-    //unsigned short RI         = 0;
-    //signed char    RDM        = 0;
-    //signed char    regA       = 0;
-    //signed char    regB       = 0;
-    //signed char    ULASaida   = 0;
 
-    //registradores de pipeline
-    RegIF_ID  if_id  = {0};  
-    RegID_EX  id_ex  = {0};  
-    RegEX_MEM ex_mem = {0};  
-    RegMEM_WB mem_wb = {0}; 
-    int            estado     = 0;
-    int            ULAop      = 0;
-    int            overflow   = 0;
-    int            zero       = 0;
-    int            n_ciclo    = 0;
-    int            n_instr    = 0;
-    unsigned char  PC         = 0;
-    Snapshot       pilha[500];
-    int            sp         = -1;
-    char           caminho[260];
-    int            op         = 99;
-    
+    RegIF_ID  if_id  = {0};
+    RegID_EX  id_ex  = {0};
+    RegEX_MEM ex_mem = {0};
+    RegMEM_WB mem_wb = {0};
 
-    titulo("SIMULADOR MINI MIPS 8 BITS — MULTICICLO");
-    printf("  UNIPAMPA — Engenharia de Computacao\n");
+    unsigned char PC      = 0;
+    int           n_ciclo = 0;
+    int           n_instr = 0;
+
+    Snapshot pilha[500];
+    int      sp = -1;
+
+    char caminho[260];
+    int  op = 99;
+
+    titulo("SIMULADOR MINI MIPS 8 BITS -- PIPELINE");
+
+    printf("  UNIPAMPA -- Engenharia de Computacao\n");
+
     printf("  Projeto Integrador II\n");
 
     do {
+
         titulo("MENU PRINCIPAL");
-        printf("  1  — Carregar programa (.mem)\n");
-        printf("  3  — Visualizar memoria (instrucoes e dados)\n");
-        printf("  4  — Visualizar banco de registradores\n");
-        printf("  5  — Imprimir simulador\n");
-        printf("  6  — Salvar programa em assembly (.asm)\n");
+
+        printf("  1  -- Carregar programa (.mem)\n");
+
+        printf("  3  -- Visualizar memoria\n");
+
+        printf("  4  -- Visualizar banco de registradores\n");
+
+        printf("  5  -- Imprimir estado do pipeline\n");
+
+        printf("  6  -- Salvar programa em assembly (.asm)\n");
+
         linha('-', 56);
-        printf("  8  — Executar programa completo (run)\n");
-        printf("  9  — Executar um ciclo de clock (step)\n");
-        printf("  10 — Desfazer ultimo ciclo (back)\n");
+
+        printf("  8  -- Executar programa completo (run)\n");
+
+        printf("  9  -- Executar um ciclo de clock (step)\n");
+
+        printf("  10 -- Desfazer ultimo ciclo (back)\n");
+
         linha('-', 56);
-        printf("  0  — Sair\n");
+
+        printf("  0  -- Sair\n");
+
         printf("\n  Sua escolha: ");
+
         scanf("%d", &op);
 
         switch (op)
         {
 
             case 1:
+
                 caminho[0] = '\0';
+
                 selecionar_arquivo(caminho);
+
                 if (carregar_unificado(&mem_unificada, caminho) != 0)
                 {
-                    printf("\n  ! Erro ao carregar o arquivo. Verifique o caminho.\n");
+
+                    printf("\n  ! Erro ao carregar o arquivo.\n");
+
                 }
+
                 else
                 {
-                    PC      = 0;
-                    estado  = 0;
-                    n_ciclo = 0;
-                    n_instr = 0;
-                    sp      = -1;
+
+                    PC= 0;
+
+                    n_ciclo= 0;
+
+                    n_instr= 0;
+
+                    sp= -1;
+
+
+                    contaInstrucoes = (instrucoes){0};
+
+                    memset(&if_id,  0, sizeof(if_id));
+
+                    memset(&id_ex,  0, sizeof(id_ex));
+
+                    memset(&ex_mem, 0, sizeof(ex_mem));
+
+                    memset(&mem_wb, 0, sizeof(mem_wb));
+
                     iniat(reg);
-                    printf("\n  Programa carregado com sucesso!\n");
-                    printf("  Registradores zerados. PC = 0. Pronto para executar.\n");
+
+                    printf("\n  Programa carregado. PC=0. Pronto para executar.\n");
+
                 }
+
                 break;
 
+
             case 3:
+
                 titulo("MEMORIA DO SIMULADOR");
+
                 print_mem_unificada(&mem_unificada);
+
                 break;
 
 
             case 4:
+
                 titulo("BANCO DE REGISTRADORES");
+
                 print_regs(reg);
+
                 break;
+
 
             case 5:
 
-                printf("\n");
-                printf("====================================================\n");
-                printf("              ESTADO DO SIMULADOR                   \n");
-                printf("====================================================\n");
-
-                printf(" PC                    │ %3d │ ", PC);
-                print_bin8(PC);
-                printf("\n");
-                printf(" Estado FSM            │ %3d\n", estado);
-                printf(" Clocks                │ %3d\n", n_ciclo);
-                printf(" Instrucoes concluidas │ %3d\n", n_instr);
-
-                printf("----------------------------------------------------\n");
-
-                printf(" RI        │ ");
-                print_bin(RI);
-                printf(" │ 0x%04X\n", RI);
-                printf(" RDM       │ %4d\n", RDM);
-                printf(" RegA      │ %4d\n", regA);
-                printf(" RegB      │ %4d\n", regB);
-                printf(" ULASaida  │ %4d\n", ULASaida);
-
-                printf("====================================================\n");
-
-                printf("----------------------------------------------------\n");
+                print_pipeline_state(PC, &if_id, &id_ex, &ex_mem, &mem_wb,n_ciclo, n_instr);
 
                 printEstatisticas(contaInstrucoes);
 
-                printf("====================================================\n");
-
                 print_regs(reg);
+
                 print_mem_unificada(&mem_unificada);
+
                 break;
+
 
             case 6:
+
                 titulo("SALVAR ASSEMBLY");
+
                 print_program(&mem_unificada, 128);
+
                 save_program_asm(&mem_unificada, 128, "programa.asm");
+
                 printf("\n  Arquivo salvo: programa.asm\n");
+
                 break;
 
+
             case 8:
+
                 titulo("EXECUTANDO PROGRAMA COMPLETO");
-                PC      = 0;
-                estado  = 0;
-                n_ciclo = 0;
-                n_instr = 0;
-                sp      = -1;
+
+                PC= 0;
+
+                n_ciclo= 0;
+
+                n_instr= 0;
+
+                sp= -1;
+
+                contaInstrucoes = (instrucoes){0};
+
+                memset(&if_id,  0, sizeof(if_id));
+
+                memset(&id_ex,  0, sizeof(id_ex));
+
+                memset(&ex_mem, 0, sizeof(ex_mem));
+
+                memset(&mem_wb, 0, sizeof(mem_wb));
+
                 iniat(reg);
-                printf("  PC = 0 | Registradores zerados\n");
-                printf("  Iniciando execucao...\n");
 
-                while (PC < 128)
-                {
-                    push_multi(pilha, &sp, reg, Sinais, ULAop, overflow,
-                               &if_id, &id_ex, &ex_mem, &mem_wb, PC, estado, n_ciclo, n_instr, &mem_unificada, contaInstrucoes); 
 
-                    int concluiu = executa_ciclo(&mem_unificada, reg, Sinais,
-                                                 &estado, &PC, &RI, &RDM,
-                                                 &regA, &regB, &ULASaida,
-                                                 &ULAop, &overflow, &zero,
-                                                 &n_ciclo,&contaInstrucoes);
-                    if (concluiu)
+                    int restante = 0;
+
+                    while (PC < (unsigned char)mem_unificada.n || restante < 4)
                     {
-                        n_instr++;
-                        printf("\n");
-                        linha('*', 56);
-                        printf("  INSTRUCAO %d CONCLUIDA  |  ciclo total: %d\n",
-                               n_instr, n_ciclo);
-                        printf("  Registradores: ");
+
+                        if (PC >= (unsigned char)mem_unificada.n)
+                        {
+
+                            restante++;
+
+                        }
+
+                        push_pipeline(pilha, &sp, reg, PC, n_ciclo, n_instr,&if_id, &id_ex, &ex_mem, &mem_wb,&mem_unificada, contaInstrucoes);
+
+                        executa_ciclo(&mem_unificada, reg, &PC,&if_id, &id_ex, &ex_mem, &mem_wb,&n_ciclo, &n_instr, &contaInstrucoes);
+
+                        printf("  Regs: ");
+
                         for (int i = 0; i < 8; i++)
+                        {
+
                             printf("R%d=%d  ", i, reg[i]);
+
+                        }
+
+
                         printf("\n");
-                        linha('*', 56);
+
                     }
 
-                    /*if (n_ciclo > 10000)
-                    {
-                        printf("\n  ! Limite de 10000 ciclos atingido. Execucao interrompida.\n");
-                        break;
-                    }
 
-                    */
-                }
 
                 titulo("FIM DO PROGRAMA");
+
                 printf("  Total de ciclos de clock : %d\n", n_ciclo);
-                printf("  Total de instrucoes      : %d\n", n_instr);
-                printf("  PC final                 : %d\n", PC);
+
+                printf("  Total de instrucoes: %d\n", n_instr);
+
+                printf("  PC final: %d\n", PC);
+
+                printEstatisticas(contaInstrucoes);
+
                 break;
 
             case 9:
-                titulo("STEP — EXECUTAR UM CICLO");
 
-                printf("  Ciclo: %d  |  PC: %d  |  Estado FSM: %d\n",n_ciclo + 1, PC, estado);
+                titulo("STEP -- EXECUTAR UM CICLO");
 
-                push_multi(pilha, &sp, reg, Sinais, ULAop, overflow,
-                            &if_id, &id_ex, &ex_mem, &mem_wb,
-                            PC, estado, n_ciclo, n_instr, &mem_unificada, contaInstrucoes);
+                push_pipeline(pilha, &sp, reg, PC, n_ciclo, n_instr,&if_id, &id_ex, &ex_mem, &mem_wb,&mem_unificada, contaInstrucoes);
 
-                {
-                    int concluiu = executa_ciclo(&mem_unificada, reg, Sinais,
-                                                 &estado, &PC, &RI, &RDM,
-                                                 &regA, &regB, &ULASaida,
-                                                 &ULAop, &overflow, &zero,
-                                                 &n_ciclo,&contaInstrucoes);
-                    if (concluiu)
-                    {
-                        n_instr++;
-                        printf("\n");
-                        linha('*', 56);
-                        printf("  INSTRUCAO %d CONCLUIDA NESTE CICLO\n", n_instr);
-                        linha('*', 56);
-                    }
-                    else
-                    {
-                        printf("\n  Instrucao ainda em execucao.\n");
-                        printf("  Proximo estado: %d\n", estado);
-                    }
-                }
+                executa_ciclo(&mem_unificada, reg, &PC,&if_id, &id_ex, &ex_mem, &mem_wb,&n_ciclo, &n_instr, &contaInstrucoes);
 
                 secao("Registradores apos o ciclo");
-                   printf(" RI        │ ");
-                print_bin(RI);
-                printf(" │ 0x%04X\n", RI);
-                printf(" RDM       │ %4d\n", RDM);
-                printf(" RegA      │ %4d\n", regA);
-                printf(" RegB      │ %4d\n", regB);
-                printf(" ULASaida  │ %4d\n", ULASaida);
 
                 for (int i = 0; i < 8; i++)
+                {
+
                     printf("  R%d = %d\n", i, reg[i]);
-                printf("\n  PC = %d  |  Estado FSM = %d\n", PC, estado);
+
+                }
+
+
+                printf("\n  PC = %d  |  Ciclo = %d\n", PC, n_ciclo);
+
                 break;
 
-            /* ------------------------------------------------------ */
+
             case 10:
-                titulo("BACK — DESFAZER ULTIMO CICLO");
-                pop_multi(pilha, &sp, reg, Sinais, &ULAop, &overflow,
-                          &if_id, &id_ex, &ex_mem, &mem_wb,
-                          &PC, &estado, &n_ciclo, &n_instr, &mem_unificada,&contaInstrucoes);
-                printf("  Estado restaurado com sucesso.\n");
-                printf("  PC = %d  |  Estado FSM = %d  |  Ciclo = %d\n",
-                       PC, estado, n_ciclo);
+
+                titulo("BACK -- DESFAZER ULTIMO CICLO");
+
+                pop_pipeline(pilha, &sp, reg, &PC, &n_ciclo, &n_instr,&if_id, &id_ex, &ex_mem, &mem_wb,&mem_unificada, &contaInstrucoes);
+
+                printf("  Estado restaurado. PC=%d | Ciclo=%d\n", PC, n_ciclo);
+
                 break;
 
-            /* ------------------------------------------------------ */
+
             case 0:
+
                 titulo("ENCERRANDO SIMULADOR");
+
                 printf("  Ate logo!\n\n");
+
                 break;
 
-            /* ------------------------------------------------------ */
             default:
-                printf("\n  ! Opcao invalida. Escolha um numero do menu.\n");
+
+                printf("\n  ! Opcao invalida.\n");
+
                 break;
         }
 

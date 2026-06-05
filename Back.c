@@ -1,14 +1,13 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include "Head.h"
 
-
-void push_multi(Snapshot *pilha,int *sp,signed char reg[8],int Sinais[16],int ULAop,int overflow, RegIF_ID *if_id, RegID_EX  *id_ex, RegEX_MEM *ex_mem, RegMEM_WB *mem_wb, unsigned char  PC,int estado,int n_ciclo,int n_instr, instro *mem, instrucoes contaInstrucoes)
+void push_pipeline(Snapshot *pilha, int *sp,signed char *reg, unsigned char PC,int n_ciclo, int n_instr,RegIF_ID *if_id, RegID_EX *id_ex,RegEX_MEM *ex_mem, RegMEM_WB *mem_wb,instro *mem, instrucoes contaInstrucoes)
 {
     if (*sp >= 499)
     {
 
-        printf("  [BACK] Pilha cheia (500 ciclos). O estado mais antigo sera perdido\n");
+        printf("  [BACK] Pilha cheia (500 entradas). Estado mais antigo perdido.\n");
 
         for (int i = 0; i < 499; i++)
         {
@@ -29,76 +28,46 @@ void push_multi(Snapshot *pilha,int *sp,signed char reg[8],int Sinais[16],int UL
 
     Snapshot *s = &pilha[*sp];
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8;   i++)
     {
-
-        s->reg[i] = reg[i];
-
+        s->reg[i]= reg[i];
     }
 
-
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 256; i++)
     {
-
-        s->Sinais[i] = Sinais[i];
-
+        s->memoria[i]= mem->instc[i];
     }
 
-    for(int i = 0; i < 256; i++)
-    {
-        s->memoria[i] = mem->instc[i];
-    }
+    s->PC= PC;
 
+    s->n_ciclo= n_ciclo;
 
+    s->n_instr= n_instr;
 
-    s->ULAop    = ULAop;
+    s->if_id= *if_id;
 
-    s->overflow = overflow;
+    s->id_ex= *id_ex;
 
-    s->ULASaida = ULA_saida;
+    s->ex_mem= *ex_mem;
 
-    s->RDM      = RDM;
+    s->mem_wb= *mem_wb;
 
-    s->regA     = regA;
-
-    s->regB     = regB;
-
-    s->RI       = RI;
-
-    s->PC       = PC;
-
-    s->estado   = estado;
-
-    s->n_ciclo  = n_ciclo;
-
-    s->n_instr  = n_instr;
-
-
-
-    s->tipoR = contaInstrucoes.tipoR;
-    s->addi = contaInstrucoes.addi;
-    s->lw = contaInstrucoes.lw;
-    s->sw = contaInstrucoes.sw;
-    s->beq = contaInstrucoes.beq;
-    s->jump = contaInstrucoes.jump;
+    s->contaInstrucoes = contaInstrucoes;
 
 }
 
-void pop_multi(Snapshot *pilha,int *sp,signed char reg[8],int Sinais[16],int *ULAop,int *overflow, RegIF_ID *if_id, RegID_EX  *id_ex, RegEX_MEM *ex_mem, RegMEM_WB *mem_wb, unsigned char *PC,int *estado,int *n_ciclo,int *n_instr, instro *mem, instrucoes *contaInstrucoes)
+void pop_pipeline(Snapshot *pilha, int *sp,signed char *reg, unsigned char *PC,int *n_ciclo, int *n_instr,RegIF_ID *if_id, RegID_EX *id_ex,RegEX_MEM *ex_mem, RegMEM_WB *mem_wb,instro *mem, instrucoes *contaInstrucoes)
 {
     if (*sp < 0)
     {
 
-        printf("Nada para desfazer - pilha vazia\n");
+        printf("  [BACK] Nada para desfazer — pilha vazia.\n");
 
         return;
 
     }
 
-
-    unsigned char pc_antes   = *PC;
-
-    int est_antes  = *estado;
+    unsigned char pc_antes= *PC;
 
     int ciclo_antes = *n_ciclo;
 
@@ -106,57 +75,37 @@ void pop_multi(Snapshot *pilha,int *sp,signed char reg[8],int Sinais[16],int *UL
 
     (*sp)--;
 
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8;   i++)
     {
 
-        reg[i] = s->reg[i];
+        reg[i]= s->reg[i];
+
+    }
+
+    for (int i = 0; i < 256; i++)
+    {
+
+        mem->instc[i]  = s->memoria[i];
 
     }
 
 
-    for (int i = 0; i < 16; i++)
-    {
+    *PC= s->PC;
 
-        Sinais[i] = s->Sinais[i];
+    *n_ciclo= s->n_ciclo;
 
-    }
+    *n_instr = s->n_instr;
 
-    for(int i = 0; i < 256; i++)
-    {
-        mem->instc[i] = s->memoria[i];
-    }
+    *if_id = s->if_id;
 
+    *id_ex = s->id_ex;
 
-    *ULAop    = s->ULAop;
+    *ex_mem = s->ex_mem;
 
-    *overflow = s->overflow;
+    *mem_wb = s->mem_wb;
 
-   *ULA_saida = s->ULASaida;
-
-    *RDM      = s->RDM;
-
-    *regA     = s->regA;
-
-    *regB     = s->regB;
-
-    *RI       = s->RI;
-
-    *PC       = s->PC;
-
-    *estado   = s->estado;
-
-    *n_ciclo  = s->n_ciclo;
-
-    *n_instr  = s->n_instr;
+    *contaInstrucoes = s->contaInstrucoes;
 
 
-    contaInstrucoes->tipoR = s->tipoR;
-    contaInstrucoes->addi = s->addi;
-    contaInstrucoes->lw = s->lw;
-    contaInstrucoes->sw = s->sw;
-    contaInstrucoes->beq = s->beq;
-    contaInstrucoes->jump = s->jump;
-
-
-    printf("  [BACK] Ciclo %d | PC=%d | Estado=%d  ->  Ciclo %d | PC=%d | Estado=%d\n",ciclo_antes, pc_antes, est_antes,*n_ciclo, *PC, *estado);
+    printf("  [BACK] Ciclo %d | PC=%d  ->  Ciclo %d | PC=%d\n",ciclo_antes, pc_antes, *n_ciclo, *PC);
 }

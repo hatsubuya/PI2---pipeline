@@ -6,11 +6,11 @@
 	<stdlib.h>
 	"Head.h"
 
-1779403145 c:\users\sandr\onedrive\햞ea de trabalho\mips_multiciclo\head.h
+1780621852 c:\users\sandr\onedrive\햞ea de trabalho\mips_multiciclo\head.h
 
-1779402074 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_multiciclo\back.c
+1780621073 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_multiciclo\back.c
 	<stdio.h>
-	<stdlib.h>
+	<string.h>
 	"Head.h"
 
 1778877358 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_multiciclo\controle.c
