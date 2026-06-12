@@ -58,9 +58,7 @@ int read(signed char reg[8], signed char rs, signed char rt,signed char *outA, s
 
 int Rdest(int Sinais[16], signed char rd, signed char rt)
 {
-
-    return Sinais[REG_DST] ? (int)rd : (int)rt;
-
+    return Sinais[0] ? (int)rd : (int)rt;
 }
 
 int esc(signed char reg[8], int dest, signed char valor, int RegWrite)

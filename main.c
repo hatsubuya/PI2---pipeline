@@ -137,325 +137,176 @@ static void printEstatisticas(instrucoes c)
     printf("  %-10s %-10d\n", "TOTAL",    total);
 
 }
-
-/* ============================================================
- *  Estagio 1 (IF) — Instruction Fetch/busca
- * ============================================================ */
 static void estagio_IF(instro *mem, unsigned char *PC, RegIF_ID *if_id)
 {
-
     if_id->RI    = ler_unificada(mem, *PC);
-
     if_id->PC    = busca(*PC);
-
     if_id->valid = 1;
 
     printf("  [IF ] PC=%-3d  RI=0x%04X  -> ", *PC, if_id->RI);
-
     print_asm(if_id->RI);
 
     *PC = if_id->PC;
-
 }
 
-/* ============================================================
- *  ESTAGIO ID — Instruction Decode / decoficação
- * ============================================================ */
 static void estagio_ID(signed char *reg, RegIF_ID *if_id, RegID_EX *id_ex)
 {
-    //debug para nao lidar agora com hazards diretametne
     if (!if_id->valid)
     {
-
         memset(id_ex, 0, sizeof(*id_ex));
-
         return;
     }
 
     unsigned short instr = if_id->RI;
 
-    id_ex->opcode = (instr >> 12) & 0xF;
+    unsigned char opcode = (instr >> 12) & 0xF;
+    unsigned char rs     = (instr >> 9)  & 0x7;
+    unsigned char rt     = (instr >> 6)  & 0x7;
+    unsigned char rd     = (instr >> 3)  & 0x7;
+    unsigned char imm6   = instr & 0x3F;
 
-    id_ex->rs     = (instr >> 9)  & 0x7;
-
-    id_ex->rt     = (instr >> 6)  & 0x7;
-
-    id_ex->rd     = (instr >> 3)  & 0x7;
-
-    id_ex->funct  = instr & 0x7;
-
-    id_ex->addr   = instr & 0xFF;
-
-    id_ex->PC     = if_id->PC;
-
-    id_ex->valid  = 1;
-
-    unsigned char imm6 = instr & 0x3F;
+    id_ex->rt    = rt;
+    id_ex->rd    = rd;
+    id_ex->PC    = if_id->PC;
+    id_ex->valid = 1;
 
     Estender(imm6, &id_ex->immx);
 
-    read(reg, (signed char)id_ex->rs, (signed char)id_ex->rt,&id_ex->A, &id_ex->B);
+    read(reg, (signed char)rs, (signed char)rt, &id_ex->A, &id_ex->B);
 
-    printf(" [ID ] op=0x%X rs=R%d(%d) rt=R%d(%d) rd=R%d imm=%d\n",id_ex->opcode,id_ex->rs, id_ex->A,id_ex->rt, id_ex->B,id_ex->rd,id_ex->immx);
+    Decodifica_controle(opcode,
+                        &id_ex->RegDst,
+                        &id_ex->ULAOp,
+                        &id_ex->ULAFonte,
+                        &id_ex->beq,
+                        &id_ex->jump,
+                        &id_ex->EscMem,
+                        &id_ex->EscReg,
+                        &id_ex->MemParaReg);
 
+    printf(" [ID ] op=0x%X rs=R%d(%d) rt=R%d(%d) rd=R%d imm=%d  RegDst=%d ULAOp=%d ULAFonte=%d beq=%d jump=%d EscMem=%d EscReg=%d MemParaReg=%d\n",
+           opcode, rs, id_ex->A, rt, id_ex->B, rd, id_ex->immx,
+           id_ex->RegDst, id_ex->ULAOp, id_ex->ULAFonte, id_ex->beq, id_ex->jump,
+           id_ex->EscMem, id_ex->EscReg, id_ex->MemParaReg);
 }
 
-/* ============================================================
- *  ESTAGIO EX — Execute/exewcução
- * ============================================================ */
 static void estagio_EX(RegID_EX *id_ex, RegEX_MEM *ex_mem)
 {
-
     if (!id_ex->valid)
     {
-
         memset(ex_mem, 0, sizeof(*ex_mem));
-
         return;
-
     }
-
-    unsigned char opcode = id_ex->opcode;
 
     int overflow = 0, zero = 0;
 
     memset(ex_mem, 0, sizeof(*ex_mem));
 
-    ex_mem->rt    = id_ex->rt;
-
-    ex_mem->rd    = id_ex->rd;
-
     ex_mem->B     = id_ex->B;
+    ex_mem->dest  = id_ex->RegDst ? id_ex->rd : id_ex->rt;
+    ex_mem->EscReg    = id_ex->EscReg;
+    ex_mem->MemParaReg= id_ex->MemParaReg;
+    ex_mem->EscMem    = id_ex->EscMem;
+    ex_mem->beq       = id_ex->beq;
+    ex_mem->jump      = id_ex->jump;
+    ex_mem->valid     = 1;
 
-    ex_mem->addr  = id_ex->addr;
+    int ula_result = ulamx(&(int){id_ex->ULAFonte}, id_ex->A, id_ex->B, id_ex->immx);
 
-    ex_mem->valid = 1;
+    int dummy_overflow = 0;
+    ula_result = ula(id_ex->ULAOp, id_ex->A,
+                     id_ex->ULAFonte ? id_ex->immx : id_ex->B,
+                     &overflow, &zero);
 
-    int ula_result = 0;
+    if (id_ex->beq)
+        ex_mem->add_result = branch(id_ex->PC, (unsigned char)id_ex->immx);
 
-    switch (opcode)
-    {
-        case 0x0: //Tipo R: add / sub / and / or
+    if (id_ex->jump)
+        ex_mem->add_result = jump((unsigned char)id_ex->immx);
 
-            tipo(id_ex->funct);
+    ex_mem->ULA_saida = (signed char)ula_result;
+    ex_mem->zero      = zero;
 
-            ula_result= ula(id_ex->funct, id_ex->A, id_ex->B,&overflow, &zero);
-
-            ex_mem->RegWrite = 1;
-
-            ex_mem->RegDst   = 1;
-
-            break;
-
-        case 0x4: // addi: rt = rs + imm
-
-            ula_result= ula(0, id_ex->A, id_ex->immx,&overflow, &zero);
-
-            ex_mem->RegWrite = 1;
-
-            ex_mem->RegDst   = 0;
-
-            break;
-
-        case 0xB: // lw: endereco = rs + imm
-
-            ula_result       = ula(0, id_ex->A, id_ex->immx,&overflow, &zero);
-
-            ex_mem->MemRead  = 1;
-
-            ex_mem->MemToReg = 1;
-
-            ex_mem->RegWrite = 1;
-
-            ex_mem->RegDst   = 0;
-
-            break;
-
-        case 0xF: // sw: endereco = rs + imm
-
-            ula_result= ula(0, id_ex->A, id_ex->immx,&overflow, &zero);
-
-            ex_mem->MemWrite = 1;
-
-            break;
-
-        case 0x8: // beq
-
-            ula_result= ula(2, id_ex->A, id_ex->B,&overflow, &zero);
-
-            ex_mem->Branch= 1;
-
-            ex_mem->PC_branch = branch(id_ex->PC, (unsigned char)id_ex->immx);
-
-            break;
-
-        case 0x2: // jump
-
-            ex_mem->Jump = 1;
-
-            break;
-
-        default:
-
-            printf("  [EX ] opcode desconhecido: 0x%X\n", opcode);
-
-            break;
-
-    }
-
-    ex_mem->ULA_saida = ula_result;
-
-    ex_mem->zero= zero;
-
-
-    printf("  [EX ] op=0x%X ULA=%d zero=%d  RW=%d MR=%d MW=%d Branch=%d Jump=%d\n",opcode, ex_mem->ULA_saida, ex_mem->zero,ex_mem->RegWrite, ex_mem->MemRead, ex_mem->MemWrite,ex_mem->Branch, ex_mem->Jump);
-
+    printf("  [EX ] ULA=%d zero=%d EscReg=%d EscMem=%d beq=%d jump=%d\n",
+           ex_mem->ULA_saida, ex_mem->zero,
+           ex_mem->EscReg, ex_mem->EscMem, ex_mem->beq, ex_mem->jump);
 }
 
-/* ============================================================
- *  ESTAGIO MEM — Memory Access/ acesso a memoria
- * ============================================================ */
-static void estagio_MEM(instro *mem, unsigned char *PC,RegEX_MEM *ex_mem, RegMEM_WB *mem_wb,instrucoes *conta, int *n_instr)
+static void estagio_MEM(instro *mem, unsigned char *PC, RegEX_MEM *ex_mem, RegMEM_WB *mem_wb, instrucoes *conta, int *n_instr)
 {
-
     if (!ex_mem->valid)
     {
-
         memset(mem_wb, 0, sizeof(*mem_wb));
-
         return;
-
     }
 
-    mem_wb->rt= ex_mem->rt;
+    mem_wb->dest     = ex_mem->dest;
+    mem_wb->RegWrite = ex_mem->EscReg;
+    mem_wb->MemToReg = ex_mem->MemParaReg;
+    mem_wb->ULA_saida= ex_mem->ULA_saida;
+    mem_wb->RDM      = 0;
+    mem_wb->valid    = 1;
 
-    mem_wb->rd= ex_mem->rd;
-
-    mem_wb->RegWrite  = ex_mem->RegWrite;
-
-    mem_wb->MemToReg  = ex_mem->MemToReg;
-
-    mem_wb->RegDst= ex_mem->RegDst;
-
-    mem_wb->ULA_saida = ex_mem->ULA_saida;
-
-    mem_wb->RDM= 0;
-
-    mem_wb->valid= 1;
-
-
-    // LW
-    if (ex_mem->MemRead)
+    if (ex_mem->MemParaReg)
     {
-
-        mem_wb->RDM = (signed char)ler_unificada(mem,(unsigned char)ex_mem->ULA_saida);
-
-        printf("  [MEM] LW: Mem[%d] = %d\n",(unsigned char)ex_mem->ULA_saida, mem_wb->RDM);
-
+        mem_wb->RDM = (signed char)ler_unificada(mem, (unsigned char)ex_mem->ULA_saida);
+        printf("  [MEM] LW: Mem[%d] = %d\n", (unsigned char)ex_mem->ULA_saida, mem_wb->RDM);
     }
 
-    // SW
-    if (ex_mem->MemWrite)
+    if (ex_mem->EscMem)
     {
-
         Store(mem, (signed char)ex_mem->ULA_saida, ex_mem->B);
-
-        printf("  [MEM] SW: Mem[%d] <- %d\n",(unsigned char)ex_mem->ULA_saida, ex_mem->B);
-
+        printf("  [MEM] SW: Mem[%d] <- %d\n", (unsigned char)ex_mem->ULA_saida, ex_mem->B);
         mem_wb->RegWrite = 0;
-
         incrementaInstr(conta, 0xF);
-
         (*n_instr)++;
-
     }
 
-    // BEQ
-    if (ex_mem->Branch)
+    if (ex_mem->beq)
     {
-
         if (ex_mem->zero)
         {
-
-            *PC = ex_mem->PC_branch;
-
+            *PC = (unsigned char)ex_mem->add_result;
             printf("  [MEM] BEQ tomado: PC <- %d\n", *PC);
-
         }
-
         else
         {
-
             printf("  [MEM] BEQ nao tomado\n");
-
         }
-
         mem_wb->RegWrite = 0;
-
         incrementaInstr(conta, 0x8);
-
         (*n_instr)++;
-
     }
 
-    // JUMP
-    if (ex_mem->Jump)
+    if (ex_mem->jump)
     {
-        *PC = jump(ex_mem->addr);
-
+        *PC = (unsigned char)ex_mem->add_result;
         printf("  [MEM] JUMP: PC <- %d\n", *PC);
-
         mem_wb->RegWrite = 0;
-
         incrementaInstr(conta, 0x2);
-
         (*n_instr)++;
-
     }
 }
 
-/* ============================================================
- *  ESTAGIO WB — Write Back/escrita
- * ============================================================ */
-static void estagio_WB(signed char *reg, RegMEM_WB *mem_wb,instrucoes *conta, int *n_instr)
+static void estagio_WB(signed char *reg, RegMEM_WB *mem_wb, instrucoes *conta, int *n_instr)
 {
-
     if (!mem_wb->valid || !mem_wb->RegWrite)
     {
         return;
     }
 
+    signed char valor = mem_wb->MemToReg ? mem_wb->RDM : mem_wb->ULA_saida;
 
-    int dest = mem_wb->RegDst ? (int)mem_wb->rd : (int)mem_wb->rt;
+    esc(reg, (int)mem_wb->dest, valor, 1);
 
-    signed char valor = mem_wb->MemToReg ? mem_wb->RDM: (signed char)mem_wb->ULA_saida;
-
-    esc(reg, dest, valor, 1);
-
-    printf("  [WB ] R%d <- %d\n", dest, valor);
+    printf("  [WB ] R%d <- %d\n", mem_wb->dest, valor);
 
     if (mem_wb->MemToReg)
-    {
-
-        incrementaInstr(conta, 0xB);   // lw
-    }
-
-    else if (mem_wb->RegDst)
-    {
-
-        incrementaInstr(conta, 0x0);   // tipo R
-
-    }
-
+        incrementaInstr(conta, 0xB);
     else
-    {
-
-        incrementaInstr(conta, 0x4);   // addi
-
-    }
+        incrementaInstr(conta, 0x0);
 
     (*n_instr)++;
-
 }
 
 /* ============================================================
@@ -487,12 +338,8 @@ static void executa_ciclo(instro *mem, signed char *reg,unsigned char *PC,RegIF_
 
 }
 
-/* ============================================================
- *  Impressao do estado do pipeline
- * ============================================================ */
-static void print_pipeline_state(unsigned char PC,RegIF_ID *if_id, RegID_EX *id_ex,RegEX_MEM *ex_mem, RegMEM_WB *mem_wb,int n_ciclo, int n_instr)
+static void print_pipeline_state(unsigned char PC, RegIF_ID *if_id, RegID_EX *id_ex, RegEX_MEM *ex_mem, RegMEM_WB *mem_wb, int n_ciclo, int n_instr)
 {
-
     printf("\n====================================================\n");
     printf("           ESTADO DO PIPELINE\n");
     printf("====================================================\n");
@@ -500,16 +347,24 @@ static void print_pipeline_state(unsigned char PC,RegIF_ID *if_id, RegID_EX *id_
     printf(" Instrucoes concluidas | %d\n", n_instr);
     printf(" PC atual              | %d\n", PC);
     printf("----------------------------------------------------\n");
-    printf(" IF/ID  [%s]: RI=0x%04X  PC=%d\n",if_id->valid  ? "OK" : "--", if_id->RI,  if_id->PC);
+    printf(" IF/ID  [%s]: RI=0x%04X  PC=%d\n",
+           if_id->valid  ? "OK" : "--", if_id->RI, if_id->PC);
 
-    printf(" ID/EX  [%s]: op=0x%X rs=R%d rt=R%d rd=R%d imm=%d A=%d B=%d\n",id_ex->valid  ? "OK" : "--",id_ex->opcode, id_ex->rs, id_ex->rt, id_ex->rd,id_ex->immx, id_ex->A, id_ex->B);
+    printf(" ID/EX  [%s]: rt=R%d rd=R%d imm=%d A=%d B=%d\n",
+           id_ex->valid  ? "OK" : "--",
+           id_ex->rt, id_ex->rd, id_ex->immx, id_ex->A, id_ex->B);
 
-    printf(" EX/MEM [%s]: ULA=%d zero=%d RW=%d MR=%d MW=%d Br=%d Jmp=%d\n",ex_mem->valid ? "OK" : "--",ex_mem->ULA_saida, ex_mem->zero,ex_mem->RegWrite, ex_mem->MemRead, ex_mem->MemWrite,ex_mem->Branch, ex_mem->Jump);
+    printf(" EX/MEM [%s]: ULA=%d zero=%d EscReg=%d EscMem=%d beq=%d jump=%d\n",
+           ex_mem->valid ? "OK" : "--",
+           ex_mem->ULA_saida, ex_mem->zero,
+           ex_mem->EscReg, ex_mem->EscMem, ex_mem->beq, ex_mem->jump);
 
-    printf(" MEM/WB [%s]: RDM=%d ULA=%d RW=%d MtR=%d RDst=%d\n",mem_wb->valid ? "OK" : "--",mem_wb->RDM, mem_wb->ULA_saida,mem_wb->RegWrite, mem_wb->MemToReg, mem_wb->RegDst);
+    printf(" MEM/WB [%s]: RDM=%d ULA=%d RegWrite=%d MemToReg=%d dest=R%d\n",
+           mem_wb->valid ? "OK" : "--",
+           mem_wb->RDM, mem_wb->ULA_saida,
+           mem_wb->RegWrite, mem_wb->MemToReg, mem_wb->dest);
 
     printf("====================================================\n");
-
 }
 
 /* ============================================================
