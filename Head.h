@@ -25,96 +25,58 @@ typedef struct {
 } instrucoes;
 
 typedef struct {
-
-    unsigned short RI;
-
+    unsigned short IR;
     unsigned char  PC;
-
-    int valid;
-
+    unsigned char  valid;
 } RegIF_ID;
 
-typedef struct
-{
+typedef struct {
     unsigned char opcode;
-
     unsigned char rs;
-
     unsigned char rt;
-
     unsigned char rd;
-
     unsigned char funct;
-
     unsigned char addr;
-
     signed char   immx;
-
     signed char   A;
-
     signed char   B;
-
     unsigned char PC;
-
-    int valid;
-
+    unsigned char valid;
 } RegID_EX;
 
-typedef struct
-{
-
-    int ULA_saida;
-
-    int zero;
-
+typedef struct {
+    signed char   ULA_saida;
+    unsigned char zero;
     signed char   B;
-
     unsigned char rt;
-
     unsigned char rd;
-
-    int RegWrite;
-
-    int MemWrite;
-
-    int MemRead;
-
-    int MemToReg;
-
-    int RegDst;
-
-    int Branch;
-
-    unsigned char PC_branch;
-
-    int Jump;
-
+    unsigned char PC;
     unsigned char addr;
 
-    int valid;
+    unsigned char RegWrite : 1;
+    unsigned char MemWrite : 1;
+    unsigned char MemRead  : 1;
+    unsigned char MemToReg : 1;
+    unsigned char RegDst   : 1;
+    unsigned char Branch   : 1;
+    unsigned char Jump     : 1;
 
+    unsigned char valid;
 } RegEX_MEM;
 
-typedef struct
-{
-
-    signed char RDM;
-
-    int ULA_saida;
-
+typedef struct {
+    signed char   RDM;
+    signed char   ULA_saida;
     unsigned char rt;
-
     unsigned char rd;
 
-    int RegWrite;
+    unsigned char RegWrite : 1;
+    unsigned char MemToReg : 1;
+    unsigned char RegDst   : 1;
 
-    int MemToReg;
-
-    int RegDst;
-
-    int valid;
-
+    unsigned char valid;
 } RegMEM_WB;
+
 
 typedef struct
 {
