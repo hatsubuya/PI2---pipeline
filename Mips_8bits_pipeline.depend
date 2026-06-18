@@ -1,0 +1,51 @@
+# depslib dependency file v1.0
+1781695968 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\bin.c
+	<stdio.h>
+	<stdlib.h>
+	"head.h"
+
+1781717457 c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\head.h
+
+1781693265 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\pc.c
+	<stdio.h>
+	<stdlib.h>
+	"head.h"
+
+1781715669 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	"head.h"
+	<windows.h>
+	<commdlg.h>
+
+1781696078 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\mem_ins.c
+	<stdio.h>
+	<stdlib.h>
+	"head.h"
+
+1781715488 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\asembly.c
+	<stdio.h>
+	<stdlib.h>
+	"head.h"
+
+1781704203 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\controle.c
+	<stdio.h>
+	<stdlib.h>
+	"head.h"
+
+1781715980 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\banco_reg.c
+	<stdio.h>
+	<stdlib.h>
+	"head.h"
+
+1781711748 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\ula.c
+	<stdio.h>
+	<stdlib.h>
+	"head.h"
+
+1781717503 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\mem_dat.c
+	<stdio.h>
+	<stdlib.h>
+	"head.h"
+

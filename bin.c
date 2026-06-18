@@ -1,26 +1,30 @@
-
 #include <stdio.h>
-#include "Head.h"
+#include <stdlib.h>
+#include "head.h"
 
-//impressor de binario par 16 bits - não mudou nada
-void print_bin(unsigned short x)
-{
-    for (int i = 15; i >= 0; i--)
-    {
 
-        printf("%d", (x >> i) & 1);
-
-    }
-
-}
-
-//impressor de binario par 8 bits - não mudou nada
-void print_bin8(unsigned char x)
+//imprimir valores binarios de 8 bits
+void imprime_bits(unsigned char valor)
 {
     for (int i = 7; i >= 0; i--)
     {
 
-        printf("%d", (x >> i) & 1);
+        printf("%d", (valor >> i) & 1);
+
+    }
+
+    printf("\n");
+
+}
+
+//imprimir valores binarios de 16 bits
+void print_bin(unsigned short x)
+{
+
+    for(int i=15;i>=0;i--)
+    {
+
+        printf("%d", (x>>i)&1);
 
     }
 

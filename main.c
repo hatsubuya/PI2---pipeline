@@ -1,266 +1,259 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Head.h"
-#include <locale.h>
+#include "head.h"
 
 #ifdef _WIN32
     #include <windows.h>
     #include <commdlg.h>
 #endif
 
-/* ============================================================
- *  MINI MIPS 8 BITS â€” SIMULADOR PIPELINE
- *  UNIPAMPA â€” Engenharia de Computacao â€” Projeto Integrador II.
- * ============================================================ */
-
-static void linha(char c, int n)
-{
-
-    for (int i = 0; i < n; i++)
-    {
-
-        printf("%c", c);
-
-    }
-
-    printf("\n");
-
-}
-
-static void titulo(const char *txt)
-{
-
-    printf("\n");
-
-    linha('=', 56);
-
-    printf("  %s\n", txt);
-
-    linha('=', 56);
-
-}
-
-static void secao(const char *txt)
-{
-
-    printf("\n  -- %s --\n", txt);
-
-}
-
-static void selecionar_arquivo(char *caminho)
+void selecionar_arquivo(char *caminho)
 {
 #ifdef _WIN32
+
     OPENFILENAME ofn;
     memset(&ofn, 0, sizeof(ofn));
-    ofn.lStructSize  = sizeof(ofn);
-    ofn.lpstrFile    = caminho;
+
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFile = caminho;
     ofn.lpstrFile[0] = '\0';
-    ofn.nMaxFile     = 260;
-    ofn.lpstrFilter  = "Arquivos MEM\0*.mem\0Todos\0*.*\0";
+    ofn.nMaxFile = 100;
+    ofn.lpstrFilter = "Arquivos MEM\0*.mem\0Todos\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
     if (GetOpenFileName(&ofn))
-        printf("  Arquivo selecionado: %s\n", caminho);
+    {
+        printf("Arquivo selecionado: %s\n", caminho);
+    }
+
 #else
-    printf("\n  Digite o caminho do arquivo (.mem): ");
+
+    printf("Digite o caminho do arquivo (.mem): ");
     scanf("%s", caminho);
+
     strcat(caminho, ".mem");
+
 #endif
 }
 
-static void incrementaInstr(instrucoes *c, unsigned char opcode)
+void selecionar_arquivo2(char *caminho)
 {
-    switch (opcode)
+#ifdef _WIN32
+
+    OPENFILENAME ofn;
+    memset(&ofn, 0, sizeof(ofn));
+
+    ofn.lStructSize = sizeof(ofn);
+    ofn.lpstrFile = caminho;
+    ofn.lpstrFile[0] = '\0';
+    ofn.nMaxFile = 260;
+    ofn.lpstrFilter = "Arquivos DAT\0*.dat\0Todos\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileName(&ofn))
     {
-
-        case 0x0:
-
-            c->tipoR++;
-
-            break;
-
-        case 0x4:
-
-            c->addi++;
-
-            break;
-
-        case 0xB:
-
-             c->lw++;
-
-             break;
-
-        case 0xF:
-
-             c->sw++;
-
-             break;
-
-        case 0x8:
-
-            c->beq++;
-
-            break;
-
-        case 0x2:
-
-            c->jump++;
-
-            break;
-
-
+        printf("Arquivo selecionado: %s\n", caminho);
     }
 
+#else
+
+    printf("Digite o caminho do arquivo (.dat): ");
+    scanf("%s", caminho);
+
+    strcat(caminho, ".dat");
+
+#endif
 }
 
-static void printEstatisticas(instrucoes c)
-{
 
-    int total = c.tipoR + c.addi + c.lw + c.sw + c.beq + c.jump;
-
-    printf("  %-10s %-10s\n", "INSTRUCAO", "QTD");
-
-    printf("  %-10s %-10d\n", "Tipo R",   c.tipoR);
-
-    printf("  %-10s %-10d\n", "Addi",     c.addi);
-
-    printf("  %-10s %-10d\n", "LW",       c.lw);
-
-    printf("  %-10s %-10d\n", "SW",       c.sw);
-
-    printf("  %-10s %-10d\n", "BEQ",      c.beq);
-
-    printf("  %-10s %-10d\n", "Jump",     c.jump);
-
-    printf("  %-10s %-10d\n", "TOTAL",    total);
-
-}
+//primeiro estagio do pipeline
 static void estagio_IF(instro *mem, unsigned char *PC, RegIF_ID *if_id)
 {
-    if_id->RI    = ler_unificada(mem, *PC);
-    if_id->PC    = busca(*PC);
+
+
+
+    if_id->PC= busca(*PC);
+
+    if_id->RI = ler(mem,*PC);
+
     if_id->valid = 1;
 
-    printf("  [IF ] PC=%-3d  RI=0x%04X  -> ", *PC, if_id->RI);
+    *PC = if_id->PC;
+
+
+
+    printf("  [IF ] PC=%d |", *PC);
+
+    printf(" instrução atual:");
+
+    print_bin(if_id->RI);
+
+    printf(" -> ");
+
     print_asm(if_id->RI);
 
-    *PC = if_id->PC;
+
 }
 
+
+//segundo estagio do pipeline
 static void estagio_ID(signed char *reg, RegIF_ID *if_id, RegID_EX *id_ex)
 {
-    if (!if_id->valid)
-    {
-        memset(id_ex, 0, sizeof(*id_ex));
-        return;
-    }
-
+    //carrega a instrução do primeiro pipe
     unsigned short instr = if_id->RI;
 
+    //separa os bits
     unsigned char opcode = (instr >> 12) & 0xF;
     unsigned char rs     = (instr >> 9)  & 0x7;
     unsigned char rt     = (instr >> 6)  & 0x7;
     unsigned char rd     = (instr >> 3)  & 0x7;
     unsigned char imm6   = instr & 0x3F;
 
-    id_ex->rt    = rt;
-    id_ex->rd    = rd;
-    id_ex->PC    = if_id->PC;
-    id_ex->valid = 1;
+    //decodifica instrução
+
+    Decodifica_controle(opcode,&id_ex->RegDst,&id_ex->ULAOp,&id_ex->ULAFonte,&id_ex->beq,&id_ex->jump,&id_ex->EscMem,&id_ex->EscReg,&id_ex->MemParaReg);
+
+
+
+    //passa a proxima instrução para o terceiro pipeline
+    id_ex->PC= if_id->PC;
+
+    id_ex->rt= rt;
+
+    id_ex->rd= rd;
+
+    read(reg,(signed char)rs,(signed char)rt, &id_ex->A, &id_ex->B);
 
     Estender(imm6, &id_ex->immx);
 
-    read(reg, (signed char)rs, (signed char)rt, &id_ex->A, &id_ex->B);
+    id_ex->valid = 1;
 
-    Decodifica_controle(opcode,
-                        &id_ex->RegDst,
-                        &id_ex->ULAOp,
-                        &id_ex->ULAFonte,
-                        &id_ex->beq,
-                        &id_ex->jump,
-                        &id_ex->EscMem,
-                        &id_ex->EscReg,
-                        &id_ex->MemParaReg);
 
-    printf(" [ID ] op=0x%X rs=R%d(%d) rt=R%d(%d) rd=R%d imm=%d  RegDst=%d ULAOp=%d ULAFonte=%d beq=%d jump=%d EscMem=%d EscReg=%d MemParaReg=%d\n",
-           opcode, rs, id_ex->A, rt, id_ex->B, rd, id_ex->immx,
-           id_ex->RegDst, id_ex->ULAOp, id_ex->ULAFonte, id_ex->beq, id_ex->jump,
-           id_ex->EscMem, id_ex->EscReg, id_ex->MemParaReg);
+
+    // impressões
+
+    printf("[ID ] rs=R%d(%d) rt=R%d(%d) rd=R%d imm=%d \n",rs, id_ex->A, rt, id_ex->B, rd, id_ex->immx);
+
+    print_sinais(id_ex->RegDst,id_ex->ULAOp,id_ex->ULAFonte,id_ex->beq,id_ex->jump,id_ex->EscMem,id_ex->EscReg,id_ex->MemParaReg);
+
+
+
+
+
+    //printf(" [ID ] op=0x%X rs=R%d(%d) rt=R%d(%d) rd=R%d imm=%d  RegDst=%d ULAOp=%d ULAFonte=%d beq=%d jump=%d EscMem=%d EscReg=%d MemParaReg=%d\n",opcode, rs, id_ex->A, rt, id_ex->B, rd, id_ex->immx,id_ex->RegDst, id_ex->ULAOp, id_ex->ULAFonte, id_ex->beq, id_ex->jump,id_ex->EscMem, id_ex->EscReg, id_ex->MemParaReg);
 }
+
+
+
+
 
 static void estagio_EX(RegID_EX *id_ex, RegEX_MEM *ex_mem)
 {
-    if (!id_ex->valid)
-    {
-        memset(ex_mem, 0, sizeof(*ex_mem));
-        return;
-    }
 
-    int overflow = 0, zero = 0;
 
-    memset(ex_mem, 0, sizeof(*ex_mem));
+    //flags da ula
+    int overflow = 0,zero = 0;
 
-    ex_mem->B     = id_ex->B;
-    ex_mem->dest  = id_ex->RegDst ? id_ex->rd : id_ex->rt;
-    ex_mem->EscReg    = id_ex->EscReg;
-    ex_mem->MemParaReg= id_ex->MemParaReg;
-    ex_mem->EscMem    = id_ex->EscMem;
-    ex_mem->beq       = id_ex->beq;
-    ex_mem->jump      = id_ex->jump;
-    ex_mem->valid     = 1;
+    //ulamx
+    int operandoB = ulamx(id_ex->ULAFonte,id_ex->A,id_ex->B,id_ex->immx);
 
-    int ula_result = ulamx(&(int){id_ex->ULAFonte}, id_ex->A, id_ex->B, id_ex->immx);
 
-    int dummy_overflow = 0;
-    ula_result = ula(id_ex->ULAOp, id_ex->A,
-                     id_ex->ULAFonte ? id_ex->immx : id_ex->B,
-                     &overflow, &zero);
+
+//
+//passando para o proximo pipe
+//
+
+    // saida da ula
+    ex_mem->ULA_saida = ula(id_ex->ULAOp,id_ex->A,operandoB,&overflow,&zero);
+
+
+    //regdst
+    ex_mem->dest = Rdest(id_ex->RegDst,id_ex->rd,id_ex->rt);
+
+    //endereço de salto
 
     if (id_ex->beq)
+    {
         ex_mem->add_result = branch(id_ex->PC, (unsigned char)id_ex->immx);
+    }
 
     if (id_ex->jump)
+    {
         ex_mem->add_result = jump((unsigned char)id_ex->immx);
+    }
 
-    ex_mem->ULA_saida = (signed char)ula_result;
-    ex_mem->zero      = zero;
+
+    //registrador b
+    ex_mem->B = id_ex->B;
+
+    //sinais de controle
+    ex_mem->EscReg= id_ex->EscReg;
+
+    ex_mem->MemParaReg= id_ex->MemParaReg;
+
+    ex_mem->EscMem= id_ex->EscMem;
+
+    ex_mem->beq= id_ex->beq;
+
+    ex_mem->jump= id_ex->jump;
+
+    ex_mem->valid= 1;
+
+    //flags
+
+    ex_mem->zero= zero;
+
+
+
+
+
+
+
 
     printf("  [EX ] ULA=%d zero=%d EscReg=%d EscMem=%d beq=%d jump=%d\n",
            ex_mem->ULA_saida, ex_mem->zero,
            ex_mem->EscReg, ex_mem->EscMem, ex_mem->beq, ex_mem->jump);
 }
 
-static void estagio_MEM(instro *mem, unsigned char *PC, RegEX_MEM *ex_mem, RegMEM_WB *mem_wb, instrucoes *conta, int *n_instr)
-{
-    if (!ex_mem->valid)
-    {
-        memset(mem_wb, 0, sizeof(*mem_wb));
-        return;
-    }
 
-    mem_wb->dest     = ex_mem->dest;
+
+static void estagio_MEM(instro *mem, unsigned char *PC, RegEX_MEM *ex_mem, RegMEM_WB *mem_wb)
+{
+
+    mem_wb->dest = ex_mem->dest;
     mem_wb->RegWrite = ex_mem->EscReg;
     mem_wb->MemToReg = ex_mem->MemParaReg;
     mem_wb->ULA_saida= ex_mem->ULA_saida;
-    mem_wb->RDM      = 0;
-    mem_wb->valid    = 1;
+    mem_wb->RDM= 0;
+    mem_wb->valid= 1;
 
+
+    //load
     if (ex_mem->MemParaReg)
     {
         mem_wb->RDM = (signed char)ler_unificada(mem, (unsigned char)ex_mem->ULA_saida);
+
         printf("  [MEM] LW: Mem[%d] = %d\n", (unsigned char)ex_mem->ULA_saida, mem_wb->RDM);
     }
 
+    //store
     if (ex_mem->EscMem)
     {
         Store(mem, (signed char)ex_mem->ULA_saida, ex_mem->B);
+
         printf("  [MEM] SW: Mem[%d] <- %d\n", (unsigned char)ex_mem->ULA_saida, ex_mem->B);
+
         mem_wb->RegWrite = 0;
-        incrementaInstr(conta, 0xF);
-        (*n_instr)++;
+
     }
+
+
+
+
+
 
     if (ex_mem->beq)
     {
@@ -286,14 +279,14 @@ static void estagio_MEM(instro *mem, unsigned char *PC, RegEX_MEM *ex_mem, RegME
         incrementaInstr(conta, 0x2);
         (*n_instr)++;
     }
+
+
 }
 
-static void estagio_WB(signed char *reg, RegMEM_WB *mem_wb, instrucoes *conta, int *n_instr)
+
+
+static void estagio_WB(signed char *reg, RegMEM_WB *mem_wb)
 {
-    if (!mem_wb->valid || !mem_wb->RegWrite)
-    {
-        return;
-    }
 
     signed char valor = mem_wb->MemToReg ? mem_wb->RDM : mem_wb->ULA_saida;
 
@@ -301,137 +294,55 @@ static void estagio_WB(signed char *reg, RegMEM_WB *mem_wb, instrucoes *conta, i
 
     printf("  [WB ] R%d <- %d\n", mem_wb->dest, valor);
 
-    if (mem_wb->MemToReg)
-        incrementaInstr(conta, 0xB);
-    else
-        incrementaInstr(conta, 0x0);
-
-    (*n_instr)++;
-}
-
-/* ============================================================
- *  executa_ciclo â€” avanca todos os 5 estagios em paralelo
- * ============================================================ */
-static void executa_ciclo(instro *mem, signed char *reg,unsigned char *PC,RegIF_ID  *if_id,  RegID_EX  *id_ex,RegEX_MEM *ex_mem, RegMEM_WB *mem_wb,int *n_ciclo, int *n_instr,instrucoes *conta)
-{
-    (*n_ciclo)++;
-
-    printf("\n");
-
-    linha('-', 56);
-
-    printf("  CICLO %-3d  PC=%d\n", *n_ciclo, *PC);
-
-    linha('-', 56);
-
-
-    RegIF_ID  if_id_in  = *if_id;
-    RegID_EX  id_ex_in  = *id_ex;
-    RegEX_MEM ex_mem_in = *ex_mem;
-    RegMEM_WB mem_wb_in = *mem_wb;
-
-    estagio_WB (reg,  &mem_wb_in,          conta, n_instr);
-    estagio_MEM(mem, PC, &ex_mem_in, mem_wb, conta, n_instr);
-    estagio_EX (&id_ex_in,  ex_mem);
-    estagio_ID (reg,  &if_id_in,  id_ex);
-    estagio_IF (mem, PC, if_id);
 
 }
 
-static void print_pipeline_state(unsigned char PC, RegIF_ID *if_id, RegID_EX *id_ex, RegEX_MEM *ex_mem, RegMEM_WB *mem_wb, int n_ciclo, int n_instr)
-{
-    printf("\n====================================================\n");
-    printf("           ESTADO DO PIPELINE\n");
-    printf("====================================================\n");
-    printf(" Clocks                | %d\n", n_ciclo);
-    printf(" Instrucoes concluidas | %d\n", n_instr);
-    printf(" PC atual              | %d\n", PC);
-    printf("----------------------------------------------------\n");
-    printf(" IF/ID  [%s]: RI=0x%04X  PC=%d\n",
-           if_id->valid  ? "OK" : "--", if_id->RI, if_id->PC);
 
-    printf(" ID/EX  [%s]: rt=R%d rd=R%d imm=%d A=%d B=%d\n",
-           id_ex->valid  ? "OK" : "--",
-           id_ex->rt, id_ex->rd, id_ex->immx, id_ex->A, id_ex->B);
 
-    printf(" EX/MEM [%s]: ULA=%d zero=%d EscReg=%d EscMem=%d beq=%d jump=%d\n",
-           ex_mem->valid ? "OK" : "--",
-           ex_mem->ULA_saida, ex_mem->zero,
-           ex_mem->EscReg, ex_mem->EscMem, ex_mem->beq, ex_mem->jump);
 
-    printf(" MEM/WB [%s]: RDM=%d ULA=%d RegWrite=%d MemToReg=%d dest=R%d\n",
-           mem_wb->valid ? "OK" : "--",
-           mem_wb->RDM, mem_wb->ULA_saida,
-           mem_wb->RegWrite, mem_wb->MemToReg, mem_wb->dest);
 
-    printf("====================================================\n");
-}
 
-/* ============================================================
- *  MAIN
- * ============================================================ */
-int main(void)
-{
-#ifdef _WIN32
-    SetConsoleOutputCP(65001);
-    SetConsoleCP(65001);
-#endif
-    setlocale(LC_ALL, ".UTF-8");
 
-    instro      mem_unificada   = {0};
+int main() {
+
+    //operanado de controle do menu
+    int op;
+
+    //registrador
     signed char reg[8];
-    instrucoes  contaInstrucoes = {0};
+
     iniat(reg);
 
+    //instrução
+    unsigned char instruction =0;
+
+    // sao simalres entao nao ha necessidade de duas structs de 256 posições
+	instro l = {0}, dat = {0};
+
+    //primeiro registrador pipeline
     RegIF_ID  if_id  = {0};
+
+    //segundo registrador pipeline
     RegID_EX  id_ex  = {0};
+
+    //terceiro registrador pipeline
     RegEX_MEM ex_mem = {0};
+
+    //quarto registrador pipeline
     RegMEM_WB mem_wb = {0};
 
-    unsigned char PC      = 0;
-    int           n_ciclo = 0;
-    int           n_instr = 0;
 
-    Snapshot pilha[500];
-    int      sp = -1;
+    //RegEX_MEM ex_mem = {0};
+    //RegMEM_WB mem_wb = {0};;
 
-    char caminho[260];
-    int  op = 99;
+    //?????
+    char caminho[100];
 
-    titulo("SIMULADOR MINI MIPS 8 BITS -- PIPELINE");
+    int i;
 
-    printf("  UNIPAMPA -- Engenharia de Computacao\n");
+   do{
 
-    printf("  Projeto Integrador II\n");
-
-    do {
-
-        titulo("MENU PRINCIPAL");
-
-        printf("  1  -- Carregar programa (.mem)\n");
-
-        printf("  3  -- Visualizar memoria\n");
-
-        printf("  4  -- Visualizar banco de registradores\n");
-
-        printf("  5  -- Imprimir estado do pipeline\n");
-
-        printf("  6  -- Salvar programa em assembly (.asm)\n");
-
-        linha('-', 56);
-
-        printf("  8  -- Executar programa completo (run)\n");
-
-        printf("  9  -- Executar um ciclo de clock (step)\n");
-
-        printf("  10 -- Desfazer ultimo ciclo (back)\n");
-
-        linha('-', 56);
-
-        printf("  0  -- Sair\n");
-
-        printf("\n  Sua escolha: ");
-
+        printf("\n 9 - executar \n 10 - para sair");
         scanf("%d", &op);
 
         switch (op)
@@ -443,207 +354,67 @@ int main(void)
 
                 selecionar_arquivo(caminho);
 
-                if (carregar_unificado(&mem_unificada, caminho) != 0)
+                if (carregar(&l, caminho, &i) != 0)
                 {
 
-                    printf("\n  ! Erro ao carregar o arquivo.\n");
+                    printf("\n erro ao carregar memoria de instruções");
 
                 }
 
                 else
                 {
 
-                    PC= 0;
-
-                    n_ciclo= 0;
-
-                    n_instr= 0;
-
-                    sp= -1;
-
-
-                    contaInstrucoes = (instrucoes){0};
-
-                    memset(&if_id,  0, sizeof(if_id));
-
-                    memset(&id_ex,  0, sizeof(id_ex));
-
-                    memset(&ex_mem, 0, sizeof(ex_mem));
-
-                    memset(&mem_wb, 0, sizeof(mem_wb));
-
-                    iniat(reg);
-
-                    printf("\n  Programa carregado. PC=0. Pronto para executar.\n");
+                    printf("\n memoria de instruções carregada com sucesso");
 
                 }
 
-                break;
 
-
-            case 3:
-
-                titulo("MEMORIA DO SIMULADOR");
-
-                print_mem_unificada(&mem_unificada);
-
-                break;
-
-
-            case 4:
-
-                titulo("BANCO DE REGISTRADORES");
-
-                print_regs(reg);
-
-                break;
-
-
-            case 5:
-
-                print_pipeline_state(PC, &if_id, &id_ex, &ex_mem, &mem_wb,n_ciclo, n_instr);
-
-                printEstatisticas(contaInstrucoes);
-
-                print_regs(reg);
-
-                print_mem_unificada(&mem_unificada);
-
-                break;
-
-
-            case 6:
-
-                titulo("SALVAR ASSEMBLY");
-
-                print_program(&mem_unificada, 128);
-
-                save_program_asm(&mem_unificada, 128, "programa.asm");
-
-                printf("\n  Arquivo salvo: programa.asm\n");
-
-                break;
-
-
-            case 8:
-
-                titulo("EXECUTANDO PROGRAMA COMPLETO");
-
-                PC= 0;
-
-                n_ciclo= 0;
-
-                n_instr= 0;
-
-                sp= -1;
-
-                contaInstrucoes = (instrucoes){0};
-
-                memset(&if_id,  0, sizeof(if_id));
-
-                memset(&id_ex,  0, sizeof(id_ex));
-
-                memset(&ex_mem, 0, sizeof(ex_mem));
-
-                memset(&mem_wb, 0, sizeof(mem_wb));
-
-                iniat(reg);
-
-
-                    int restante = 0;
-
-                    while (PC < (unsigned char)mem_unificada.n || restante < 4)
-                    {
-
-                        if (PC >= (unsigned char)mem_unificada.n)
-                        {
-
-                            restante++;
-
-                        }
-
-                        push_pipeline(pilha, &sp, reg, PC, n_ciclo, n_instr,&if_id, &id_ex, &ex_mem, &mem_wb,&mem_unificada, contaInstrucoes);
-
-                        executa_ciclo(&mem_unificada, reg, &PC,&if_id, &id_ex, &ex_mem, &mem_wb,&n_ciclo, &n_instr, &contaInstrucoes);
-
-                        printf("  Regs: ");
-
-                        for (int i = 0; i < 8; i++)
-                        {
-
-                            printf("R%d=%d  ", i, reg[i]);
-
-                        }
-
-
-                        printf("\n");
-
-                    }
-
-
-
-                titulo("FIM DO PROGRAMA");
-
-                printf("  Total de ciclos de clock : %d\n", n_ciclo);
-
-                printf("  Total de instrucoes: %d\n", n_instr);
-
-                printf("  PC final: %d\n", PC);
-
-                printEstatisticas(contaInstrucoes);
-
-                break;
+            break;
 
             case 9:
 
-                titulo("STEP -- EXECUTAR UM CICLO");
+            //decoficação
 
-                push_pipeline(pilha, &sp, reg, PC, n_ciclo, n_instr,&if_id, &id_ex, &ex_mem, &mem_wb,&mem_unificada, contaInstrucoes);
+            //busca
 
-                executa_ciclo(&mem_unificada, reg, &PC,&if_id, &id_ex, &ex_mem, &mem_wb,&n_ciclo, &n_instr, &contaInstrucoes);
-
-                secao("Registradores apos o ciclo");
-
-                for (int i = 0; i < 8; i++)
-                {
-
-                    printf("  R%d = %d\n", i, reg[i]);
-
-                }
+            if(mem_wb.valid == 1)
+            {
+                estagio_WB(reg,&mem_wb);
+            }
 
 
-                printf("\n  PC = %d  |  Ciclo = %d\n", PC, n_ciclo);
+            if(ex_mem.valid == 1)
+            {
+                estagio_MEM(&l,&instruction,&ex_mem, &mem_wb);
+            }
 
-                break;
-
-
-            case 10:
-
-                titulo("BACK -- DESFAZER ULTIMO CICLO");
-
-                pop_pipeline(pilha, &sp, reg, &PC, &n_ciclo, &n_instr,&if_id, &id_ex, &ex_mem, &mem_wb,&mem_unificada, &contaInstrucoes);
-
-                printf("  Estado restaurado. PC=%d | Ciclo=%d\n", PC, n_ciclo);
-
-                break;
+            if(id_ex.valid == 1)
+            {
+                estagio_EX(&id_ex, &ex_mem);
+            }
 
 
-            case 0:
+            if(if_id.valid == 1)
+            {
+                estagio_ID(reg,&if_id, &id_ex);
+            }
 
-                titulo("ENCERRANDO SIMULADOR");
 
-                printf("  Ate logo!\n\n");
+            estagio_IF(&l, &instruction, &if_id);
 
-                break;
+
+
+            break;
+
 
             default:
 
-                printf("\n  ! Opcao invalida.\n");
+            printf("\n opção invalida\n");
 
-                break;
-        }
+            break;
+}
 
-    } while (op != 0);
+   }while(op!=10);
 
     return 0;
 }

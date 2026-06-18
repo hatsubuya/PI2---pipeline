@@ -1,53 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "Head.h"
+#include "head.h"
 
-
-int ulamx(int Sinais[16], signed char A, signed char B, signed char immx)
+int ulamx(int Sinal, signed char A, signed char B, signed char immx)
 {
 
-    int b0 = Sinais[ULA_FONTE_B0];
+    return (Sinal==0) ? B : immx;
 
-    int b1 = Sinais[ULA_FONTE_B1];
-
-    if (b1 == 0 && b0 == 0)
-    {
-
-        return (int)B;
-
-    }
-
-    if (b1 == 0 && b0 == 1)
-    {
-
-        return 1;
-
-    }
-
-    if (b1 == 1 && b0 == 0)
-    {
-
-        return (int)immx;
-
-    }
-
-    return 0;
 }
 
 int ula(int ULAop, signed char A, signed char B, int *overflow, int *zero)
 {
+
     int result = 0;
 
-    *overflow  = 0;
+    *overflow = 0;
 
-    *zero      = 0;
+    *zero = 0;
 
-    switch (ULAop)
+    switch(ULAop)
     {
 
         case 0:
 
             result = A + B;
+
 
             break;
 
@@ -72,20 +49,17 @@ int ula(int ULAop, signed char A, signed char B, int *overflow, int *zero)
         default:
 
             result = 0;
-
-            break;
-
     }
 
-    if (result > 127 || result < -128)
+    if(result > 127 || result < -128)
     {
 
         *overflow = 1;
 
     }
 
-
     *zero = (result == 0);
+
 
     return result;
 
@@ -146,17 +120,20 @@ void tipo(int ULAop)
 
 void Tipo2(unsigned char opcode, int *ULAop)
 {
-
-    if (opcode == 0x4 || opcode == 0xB || opcode == 0xF)
+    if(opcode == 0x4 || opcode == 0xB||opcode == 0xF)
     {
 
+        // type I
         *ULAop = 0;
 
     }
 
-    else if (opcode == 0x8)
+
+    else if(opcode == 0x8)
     {
 
+
+        // branch
         *ULAop = 2;
 
     }

@@ -1,16 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "Head.h"
+#include "head.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "Head.h"
 
-void Decodifica_controle(unsigned char opcode,unsigned char *RegDst,unsigned char *ULAOp,unsigned char *ULAFonte,unsigned char *beq,unsigned char *jump,unsigned char *EscMem,unsigned char *EscReg,unsigned char *MemParaReg)
+void print_sinais(int RegDst,int ULAOp,int ULAFonte,int beq,int jump,int EscMem,int EscReg,int MemParaReg)
+{
+    printf("\n--- SINAIS DE CONTROLE ---\n");
+
+    printf("RegDst     = %d\n", RegDst);
+    printf("ULAOp      = %d\n", ULAOp);
+    printf("ULAFonte   = %d\n", ULAFonte);
+    printf("beq        = %d\n", beq);
+    printf("jump       = %d\n", jump);
+    printf("EscMem     = %d\n", EscMem);
+    printf("EscReg     = %d\n", EscReg);
+    printf("MemParaReg = %d\n", MemParaReg);
+
+    printf("--------------------------\n");
+}
+
+void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFonte,int *beq,int *jump,int *EscMem,int *EscReg,int *MemParaReg)
 {
     switch (opcode)
     {
         case 0x0:
+
+            printf("Type R");
 
             *RegDst    = 1;
 
@@ -32,6 +47,8 @@ void Decodifica_controle(unsigned char opcode,unsigned char *RegDst,unsigned cha
 
         case 0xB:
 
+            printf("lw");
+
             *RegDst    = 0;
 
             *ULAOp     = 0;
@@ -51,6 +68,8 @@ void Decodifica_controle(unsigned char opcode,unsigned char *RegDst,unsigned cha
             break;
 
         case 0xF:
+
+            printf("sw");
 
             *RegDst    = 0;
 
@@ -72,6 +91,8 @@ void Decodifica_controle(unsigned char opcode,unsigned char *RegDst,unsigned cha
 
         case 0x8:
 
+            printf("beq");
+
             *RegDst    = 0;
 
             *ULAOp     = 2;
@@ -92,6 +113,8 @@ void Decodifica_controle(unsigned char opcode,unsigned char *RegDst,unsigned cha
 
         case 0x4:
 
+            printf("addi \n");
+
             *RegDst    = 0;
 
             *ULAOp     = 0;
@@ -111,6 +134,8 @@ void Decodifica_controle(unsigned char opcode,unsigned char *RegDst,unsigned cha
             break;
 
         case 0x2:
+
+            printf("jump");
 
             *RegDst    = 0;
 
