@@ -1,3 +1,13 @@
+
+#ifndef HEAD_H
+#define HEAD_H
+#include <ncurses.h>
+
+extern WINDOW *saida_pad;
+extern int pad_linha;
+extern int saida_h; // Importante para o cálculo do scroll
+
+#endif
 //sinais
 typedef enum
 {
@@ -80,6 +90,9 @@ typedef struct
 
     int valid;
 
+    //
+    unsigned char rs;
+
 } RegID_EX;
 
 
@@ -159,7 +172,7 @@ void imprime_bits(unsigned char valor);
 
 void print_bin(unsigned short x);
 
-
+void escrever_no_pad(const char *format, ...);
 //PC
 unsigned char busca(unsigned char instruction);
 unsigned char jump(unsigned char instruct);
@@ -177,7 +190,8 @@ void print_regs(signed char reg[8]);
 
 int iniat(signed char reg[8]);
 
-int read(signed char reg[8], signed char A, signed char B, signed char *outA, signed char *outB);
+int ler_regs(signed char reg[8], signed char A, signed char B,
+             signed char *outA, signed char *outB);
 
 int Rdest(int Sinal, signed char A, signed char B);
 
@@ -188,7 +202,7 @@ int esc(signed char reg[8], int dest, signed char A,int RegWrite);
 
 void print_sinais(int RegDst,int ULAOp,int ULAFonte,int beq,int jump,int EscMem,int EscReg,int MemParaReg);
 
-void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFonte,int *beq,int *jump,int *EscMem,int *EscReg,int *MemParaReg);
+void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFonte,int *beq,int *jump,int *EscMem,int *EscReg,int *MemParaReg, int funct);
 
 
 //ULA
@@ -214,6 +228,7 @@ void init_mem_incremental(instro *dat);
 int carregar_dados(instro *dat, const char *nome_arquivo);
 void print_mem(instro *dat);
 void save_mem_dat(instro *dat, const char *nome_arquivo);
+unsigned short load(instro *mem, unsigned char endereco);
 
 
 //organizador de impressões asembly

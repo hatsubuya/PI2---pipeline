@@ -1,74 +1,48 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ncurses.h>
 #include "head.h"
 
+extern WINDOW *saida_pad;
+#define saida_pad saida_pad
 
-//imprime o valore de todos os registradores com o auxilio das fuções de impressões binarias
 void print_regs(signed char reg[8])
 {
-    printf("\n--- REGISTRADORES ---\n");
 
-    for(int i = 0; i < 8; i++)
+    extern int pad_linha;
+    pad_linha = 0;
+    werase(saida_pad);
+
+    escrever_no_pad("--- BANCO DE REGISTRADORES ---");
+    for (int i = 0; i < 8; i++)
     {
-
-        printf("R%d = ", i);
-
-        imprime_bits((unsigned char)reg[i]);
-
-        printf(" (%d)", reg[i]);
-
-        printf("\n");
-
+        escrever_no_pad("R%d = %d", i, (int)reg[i]);
     }
-
-    printf("---------------------\n");
+    escrever_no_pad("-----------------------------");
 }
 
-
-// zera registradores, embora em teoria não seja necessario, e melhor se precaver com lixo eletronico
 int iniat(signed char reg[8])
 {
-    reg[0]=0; reg[1]=0; reg[2]=2; reg[3]=3;
-    reg[4]=0; reg[5]=0; reg[6]=0; reg[7]=0;
-
+    for (int i = 0; i < 8; i++) reg[i] = 0;
     return 0;
 }
 
-
-// le os registradores a e b
-int read(signed char reg[8], signed char A, signed char B, signed char *outA, signed char *outB)
+int ler_regs(signed char reg[8], signed char A, signed char B,
+             signed char *outA, signed char *outB)
 {
-
-    //le regitradore e atualiza valores com base neles
-    *outA = reg[A];
-
-    *outB = reg[B];
-
+    *outA = reg[(unsigned char)A];
+    *outB = reg[(unsigned char)B];
     return 0;
-
 }
 
-
-// le e retorna o valor de destino com base no sinal reg_dst
 int Rdest(int Sinal, signed char A, signed char B)
 {
-
-    return (Sinal) ? A : B;
-
+    return Sinal ? A : B;
 }
 
-
-//escreve no registradores destino, caso o sinal de escrita esteja ligado
-int esc(signed char reg[8], int dest, signed char A,int RegWrite)
+int esc(signed char reg[8], int dest, signed char A, int RegWrite)
 {
-
-    if(dest != 0 && RegWrite==1)
-    {
-
+    if (dest != 0 && RegWrite == 1)
         reg[dest] = A;
-
-    }
-
     return 0;
-
 }

@@ -1,31 +1,30 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ncurses.h>
 #include "head.h"
 
+extern WINDOW *saida_pad;
+#define saida_pad saida_pad
 
-//imprimir valores binarios de 8 bits
-void imprime_bits(unsigned char valor)
-{
-    for (int i = 7; i >= 0; i--)
-    {
+void imprime_bits(unsigned char valor) {
+    char bin[9];
 
-        printf("%d", (valor >> i) & 1);
-
+    for (int i = 7; i >= 0; i--) {
+        bin[7 - i] = (valor & (1 << i)) ? '1' : '0';
     }
+    bin[8] = '\0';
 
-    printf("\n");
 
+    escrever_no_pad("%s", bin);
 }
 
-//imprimir valores binarios de 16 bits
 void print_bin(unsigned short x)
 {
-
-    for(int i=15;i>=0;i--)
+    for (int i = 15; i >= 0; i--)
     {
-
-        printf("%d", (x>>i)&1);
-
+        if (saida_pad)
+            wprintw(saida_pad, "%d", (x >> i) & 1);
+        else
+            printf("%d", (x >> i) & 1);
     }
-
 }

@@ -1,53 +1,91 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "head.h"
+#include <ncurses.h>
+
+extern WINDOW *saida_pad;
+#define saida_pad saida_pad
 
 
-void print_sinais(int RegDst,int ULAOp,int ULAFonte,int beq,int jump,int EscMem,int EscReg,int MemParaReg)
+
+void print_sinais(int RegDst, int ULAOp, int ULAFonte, int beq, int jump,
+                  int EscMem, int EscReg, int MemParaReg)
 {
-    printf("\n--- SINAIS DE CONTROLE ---\n");
+    if (saida_pad)
+    {
+        escrever_no_pad("--- SINAIS DE CONTROLE ---");
 
-    printf("RegDst     = %d\n", RegDst);
-    printf("ULAOp      = %d\n", ULAOp);
-    printf("ULAFonte   = %d\n", ULAFonte);
-    printf("beq        = %d\n", beq);
-    printf("jump       = %d\n", jump);
-    printf("EscMem     = %d\n", EscMem);
-    printf("EscReg     = %d\n", EscReg);
-    printf("MemParaReg = %d\n", MemParaReg);
-
-    printf("--------------------------\n");
+        escrever_no_pad("RegDst=%d | ULAOp=%d | ULAFonte=%d", RegDst, ULAOp, ULAFonte);
+        escrever_no_pad("beq=%d | jump=%d | EscMem=%d", beq, jump, EscMem);
+        escrever_no_pad("EscReg=%d | MemParaReg=%d", EscReg, MemParaReg);
+        escrever_no_pad("--------------------------");
+    }
 }
 
-void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFonte,int *beq,int *jump,int *EscMem,int *EscReg,int *MemParaReg)
+void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFonte,int *beq,int *jump,int *EscMem,int *EscReg,int *MemParaReg,int funct)
 {
     switch (opcode)
     {
         case 0x0:
 
-            printf("Type R");
+            printf("Type R |");
 
-            *RegDst    = 1;
+            switch(funct)
+            {
+                case 0:
 
-            *ULAOp     = 0;
+                printf("Add |");
 
-            *ULAFonte  = 0;
+                *RegDst    = 1;
 
-            *beq       = 0;
+                *ULAOp     = 0;
 
-            *jump       = 0;
+                *ULAFonte  = 0;
 
-            *EscMem    = 0;
+                *beq       = 0;
 
-            *EscReg    = 1;
+                *jump       = 0;
 
-            *MemParaReg = 0;
+                *EscMem    = 0;
+
+                *EscReg    = 1;
+
+                *MemParaReg = 0;
+
+
+                break;
+
+                case 2:
+
+                printf("Sub |");
+
+                *RegDst    = 1;
+
+                *ULAOp     = 2;
+
+                *ULAFonte  = 0;
+
+                *beq       = 0;
+
+                *jump       = 0;
+
+                *EscMem    = 0;
+
+                *EscReg    = 1;
+
+                *MemParaReg = 0;
+
+
+                break;
+            }
+
+
 
             break;
 
         case 0xB:
 
-            printf("lw");
+            printf("lw |");
 
             *RegDst    = 0;
 
@@ -69,7 +107,7 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         case 0xF:
 
-            printf("sw");
+            printf("sw |");
 
             *RegDst    = 0;
 
@@ -91,7 +129,7 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         case 0x8:
 
-            printf("beq");
+            printf("beq |");
 
             *RegDst    = 0;
 
@@ -113,7 +151,7 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         case 0x4:
 
-            printf("addi \n");
+            printf("addi |");
 
             *RegDst    = 0;
 
@@ -135,7 +173,7 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         case 0x2:
 
-            printf("jump");
+            printf("jump |");
 
             *RegDst    = 0;
 

@@ -4,14 +4,15 @@
 	<stdlib.h>
 	"head.h"
 
-1781717457 c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\head.h
+1782508844 c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\head.h
+	<ncurses.h>
 
 1781693265 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\pc.c
 	<stdio.h>
 	<stdlib.h>
 	"head.h"
 
-1781715669 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\main.c
+1782496346 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\main.c
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -24,17 +25,17 @@
 	<stdlib.h>
 	"head.h"
 
-1781715488 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\asembly.c
+1782496751 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\asembly.c
 	<stdio.h>
 	<stdlib.h>
 	"head.h"
 
-1781704203 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\controle.c
+1781850891 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\controle.c
 	<stdio.h>
 	<stdlib.h>
 	"head.h"
 
-1781715980 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\banco_reg.c
+1781891109 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\banco_reg.c
 	<stdio.h>
 	<stdlib.h>
 	"head.h"
@@ -44,7 +45,7 @@
 	<stdlib.h>
 	"head.h"
 
-1781717503 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\mem_dat.c
+1781789565 source:c:\users\sandr\onedrive\햞ea de trabalho\mips_8bits_pipeline\mem_dat.c
 	<stdio.h>
 	<stdlib.h>
 	"head.h"
