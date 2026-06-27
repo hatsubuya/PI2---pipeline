@@ -28,13 +28,11 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
     {
         case 0x0:
 
-            printf("Type R |");
 
             switch(funct)
             {
                 case 0:
 
-                printf("Add |");
 
                 *RegDst    = 1;
 
@@ -57,7 +55,6 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
                 case 2:
 
-                printf("Sub |");
 
                 *RegDst    = 1;
 
@@ -85,7 +82,6 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         case 0xB:
 
-            printf("lw |");
 
             *RegDst    = 0;
 
@@ -107,7 +103,6 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         case 0xF:
 
-            printf("sw |");
 
             *RegDst    = 0;
 
@@ -129,7 +124,6 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         case 0x8:
 
-            printf("beq |");
 
             *RegDst    = 0;
 
@@ -151,7 +145,6 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         case 0x4:
 
-            printf("addi |");
 
             *RegDst    = 0;
 
@@ -173,7 +166,6 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         case 0x2:
 
-            printf("jump |");
 
             *RegDst    = 0;
 
@@ -195,7 +187,6 @@ void Decodifica_controle(unsigned char opcode,int *RegDst,int *ULAOp,int *ULAFon
 
         default:
 
-            printf("Opcode desconhecido: 0x%X\n", opcode);
 
             break;
     }

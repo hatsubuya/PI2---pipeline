@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "Head.h"
+#include "head2.h"
 
 void push_pipeline(Snapshot *pilha, int *sp,signed char *reg, unsigned char PC,int n_ciclo, int n_instr,RegIF_ID *if_id, RegID_EX *id_ex,RegEX_MEM *ex_mem, RegMEM_WB *mem_wb,instro *mem, instrucoes contaInstrucoes)
 {
@@ -61,7 +61,7 @@ void pop_pipeline(Snapshot *pilha, int *sp,signed char *reg, unsigned char *PC,i
     if (*sp < 0)
     {
 
-        printf("  [BACK] Nada para desfazer — pilha vazia.\n");
+        printf("  [BACK] Nada para desfazer ï¿½ pilha vazia.\n");
 
         return;
 

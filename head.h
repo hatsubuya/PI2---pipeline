@@ -5,7 +5,7 @@
 
 extern WINDOW *saida_pad;
 extern int pad_linha;
-extern int saida_h; // Importante para o cálculo do scroll
+extern int saida_h; // Importante para o cï¿½lculo do scroll
 
 #endif
 //sinais
@@ -35,13 +35,13 @@ typedef struct {
 //primeiro registrador pipeline
 typedef struct {
 
-    // instrução atual
+    // instruï¿½ï¿½o atual
     unsigned short RI;
 
-    //proximo endereço de instrução
+    //proximo endereï¿½o de instruï¿½ï¿½o
     unsigned char  PC;
 
-    //flag de validação
+    //flag de validaï¿½ï¿½o
     int valid;
 
 } RegIF_ID;
@@ -72,7 +72,7 @@ typedef struct
     int jump;
 
 
-    //proximo endereço de instrução
+    //proximo endereï¿½o de instruï¿½ï¿½o
     unsigned char PC;
 
     signed char   A;  // Dado lido #1
@@ -106,7 +106,7 @@ typedef struct
 typedef struct {
 
 
-    // enderço ao qual o salto ocorrera
+    // enderï¿½o ao qual o salto ocorrera
     unsigned char add_result;
 
     // valor de saida da ula
@@ -178,7 +178,7 @@ unsigned char busca(unsigned char instruction);
 unsigned char jump(unsigned char instruct);
 unsigned char branch(unsigned char instruct,unsigned char imm);
 
-//memoria de instruções
+//memoria de instruï¿½ï¿½es
 void print_mem_inst(instro *l, int tamanho);
 
 int carregar(instro *l, const char *nome_arquivo,int *i);
@@ -231,8 +231,10 @@ void save_mem_dat(instro *dat, const char *nome_arquivo);
 unsigned short load(instro *mem, unsigned char endereco);
 
 
-//organizador de impressões asembly
+//organizador de impressï¿½es asembly
 void print_asm(unsigned short instr);
+
+void asm_str(unsigned short instr, char *buf, int bufsz);
 
 void print_program(instro *l, int tamanho);
 

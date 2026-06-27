@@ -37,6 +37,11 @@ static void decode_asm(unsigned short instr, char *buf, int bufsz)
     else                    snprintf(buf, bufsz, "op_0x%X $r%d,$r%d,%d", opcode, rs, rt, immx);
 }
 
+void asm_str(unsigned short instr, char *buf, int bufsz)
+{
+    decode_asm(instr, buf, bufsz);
+}
+
 void print_asm(unsigned short instr)
 {
     char buf[64];
