@@ -45,8 +45,9 @@ int body_h = 0;// altura da regiao de menu/saida
 //paineis do dashboard 
 WINDOW *pipe_win = NULL;   //ocupacao do pipeline      
 WINDOW *reg_win  = NULL;   // banco de registradores    
-WINDOW *stat_win = NULL;   // estatisticas              
-WINDOW *prog_win = NULL;   // programa / memoria de instrucoes 
+WINDOW *stat_win = NULL;   // estatisticas
+WINDOW *dmem_win = NULL;   // memoria de dados
+WINDOW *prog_win = NULL;   // programa / memoria de instrucoes
 /* saida_win = painel de LOG (texto rolavel via saida_pad) */
 
 // ponteiros para o estado vivo da simulacao
@@ -927,7 +928,7 @@ int main(void)
                 PLOG("Erro ao carregar memoria de instrucoes (verifique o caminho: %s).", caminho);
             else {
                 PLOG("Memoria de instrucoes carregada: %d instrucoes.", i);
-                PLOG("");
+                PLOG(" ");
                 PLOG("Agora use:  6=Run   7=Step   5=Imprimir memorias");
             }
             aguardar_scroll();
@@ -998,7 +999,7 @@ int main(void)
                     wprintw(saida_pad, " | %s", b);
                     pad_linha++;
                 }
-                PLOG("");
+                PLOG(" ");
                 PLOG("Arquivo 'programa.asm' salvo (256 instrucoes).");
             }
             aguardar_scroll();
